@@ -13,7 +13,7 @@ export function VentilationSection() {
   const handleCalculate = () => {
     const lNum = parseFloat(L.replace(",", "."))
     if (!isNaN(lNum) && lNum > 0) {
-      const F = lNum / 3600
+      const F = (lNum / 3600) * 3
       setResult(F)
       setCalculated(true)
     }
@@ -53,7 +53,7 @@ export function VentilationSection() {
             <div className="mb-6 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm md:p-8">
               <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формула</p>
               <p className="font-mono text-2xl text-foreground md:text-3xl">
-                F = L / 3600
+                F = (L / 3600) × Vс
               </p>
             </div>
 
@@ -66,7 +66,10 @@ export function VentilationSection() {
                 <span className="mt-1 font-mono text-xs text-foreground/40">L</span>
                 <span>Максимальная подача ГВУ (из паспорта), м³/ч</span>
               </div>
-
+              <div className="flex items-start gap-3">
+                <span className="mt-1 font-mono text-xs text-foreground/40">Vс</span>
+                <span>Скорость при принудительном проветривании — <strong className="text-foreground">3 м/с</strong></span>
+              </div>
             </div>
           </div>
 
