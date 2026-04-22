@@ -15,31 +15,31 @@ export function ServicesSection() {
           }`}
         >
           <h2 className="mb-2 font-sans text-5xl font-light tracking-tight text-foreground md:text-6xl lg:text-7xl">
-            Услуги
+            Возможности
           </h2>
-          <p className="font-mono text-sm text-foreground/60 md:text-base">/ Наши компетенции</p>
+          <p className="font-mono text-sm text-foreground/60 md:text-base">/ Что умеет приложение</p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 md:gap-x-16 md:gap-y-12 lg:gap-x-24">
           {[
             {
-              title: "Веб-разработка",
-              description: "Создание современных веб-приложений любой сложности",
+              title: "Расчёт воздухообмена",
+              description: "Автоматический расчёт по нормам СП 60.13330 с учётом назначения помещений и числа людей",
               direction: "top",
             },
             {
-              title: "UI/UX Дизайн",
-              description: "Проектирование удобных и красивых интерфейсов",
+              title: "Подбор оборудования",
+              description: "Умный подбор вентиляторов, воздуховодов и доводчиков из актуальных каталогов",
               direction: "right",
             },
             {
-              title: "Мобильные приложения",
-              description: "Кроссплатформенная разработка для iOS и Android",
+              title: "Аэродинамический расчёт",
+              description: "Расчёт потерь давления в сетях воздуховодов любой конфигурации",
               direction: "left",
             },
             {
-              title: "Консалтинг",
-              description: "Техническая экспертиза и стратегическое планирование",
+              title: "Отчёт и спецификация",
+              description: "Автоматическое формирование отчётов и ведомостей оборудования в PDF и Excel",
               direction: "bottom",
             },
           ].map((service, i) => (
