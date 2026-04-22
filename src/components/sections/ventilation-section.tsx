@@ -2,7 +2,7 @@ import { useReveal } from "@/hooks/use-reveal"
 import { useState } from "react"
 import Icon from "@/components/ui/icon"
 
-const VC = 3 // скорость при принудительном проветривании, м/с
+
 
 export function VentilationSection() {
   const { ref, isVisible } = useReveal(0.3)
@@ -13,7 +13,7 @@ export function VentilationSection() {
   const handleCalculate = () => {
     const lNum = parseFloat(L.replace(",", "."))
     if (!isNaN(lNum) && lNum > 0) {
-      const F = lNum / (3600 * VC)
+      const F = lNum / 3600
       setResult(F)
       setCalculated(true)
     }
@@ -53,7 +53,7 @@ export function VentilationSection() {
             <div className="mb-6 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm md:p-8">
               <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формула</p>
               <p className="font-mono text-2xl text-foreground md:text-3xl">
-                F = L / (3600 × V<sub className="text-base">с</sub>)
+                F = L / 3600
               </p>
             </div>
 
@@ -66,10 +66,7 @@ export function VentilationSection() {
                 <span className="mt-1 font-mono text-xs text-foreground/40">L</span>
                 <span>Максимальная подача ГВУ (из паспорта), м³/ч</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="mt-1 font-mono text-xs text-foreground/40">V<sub>с</sub></span>
-                <span>Скорость в канале при принудительном проветривании — <strong className="text-foreground">3 м/с</strong></span>
-              </div>
+
             </div>
           </div>
 
@@ -94,16 +91,6 @@ export function VentilationSection() {
                   placeholder="Например: 12000"
                   className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none md:text-xl"
                 />
-              </div>
-
-              <div>
-                <label className="mb-2 block font-mono text-xs text-foreground/60">
-                  Скорость V<sub>с</sub>, м/с
-                </label>
-                <div className="flex items-center gap-3 border-b border-foreground/15 py-2">
-                  <span className="text-lg text-foreground md:text-xl">3</span>
-                  <span className="font-mono text-xs text-foreground/40">(фиксировано — принудительное проветривание)</span>
-                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
