@@ -6,11 +6,10 @@ import { ContactSection } from "@/components/sections/contact-section"
 import { VentilationSection } from "@/components/sections/ventilation-section"
 import { FirefightingSection } from "@/components/sections/firefighting-section"
 import { ReferenceSection } from "@/components/sections/reference-section"
-import { FireLoadSection } from "@/components/sections/fire-load-section"
 import { MagneticButton } from "@/components/magnetic-button"
 import { useRef, useEffect, useState } from "react"
 
-const TOTAL_SECTIONS = 7
+const TOTAL_SECTIONS = 6
 
 export default function Index() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -231,7 +230,7 @@ export default function Index() {
         </button>
 
         <div className="hidden items-center gap-8 md:flex">
-          {["Главная", "О нас", "Вентиляция", "Пожаротушение", "Справочник", "Пожарная нагрузка", "Контакты"].map((item, index) => (
+          {["Главная", "О нас", "Вентиляция", "Пожаротушение", "Справочник", "Контакты"].map((item, index) => (
             <button
               key={item}
               onClick={() => scrollToSection(index)}
@@ -306,7 +305,6 @@ export default function Index() {
         <VentilationSection />
         <FirefightingSection />
         <ReferenceSection />
-        <FireLoadSection />
         <ContactSection />
       </div>
 
