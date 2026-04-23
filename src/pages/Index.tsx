@@ -273,9 +273,7 @@ export default function Index() {
               </span>
             </h1>
             <p className="mb-8 max-w-xl animate-in fade-in slide-in-from-bottom-4 text-lg leading-relaxed text-foreground/90 duration-1000 delay-200 md:text-xl">
-              <span className="text-pretty">
-                Профессиональный инструмент для инженеров-проектировщиков: расчёт воздухообмена, подбор оборудования и автоматическое формирование отчётов.
-              </span>
+              <span className="text-pretty">Профессиональный инструмент для Службы депрессионных съемок и группы инженерного обеспечения ФГУП "ВГСЧ"</span>
             </p>
             <div className="flex animate-in fade-in slide-in-from-bottom-4 flex-col gap-4 duration-1000 delay-300 sm:flex-row sm:items-center">
               <MagneticButton
