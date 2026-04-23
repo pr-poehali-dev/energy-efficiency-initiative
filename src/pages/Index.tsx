@@ -218,9 +218,7 @@ export default function Index() {
           onClick={() => scrollToSection(0)}
           className="flex items-center gap-2 transition-transform hover:scale-105"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground/15 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-foreground/25">
-            <span className="font-sans text-xl font-bold text-foreground">С</span>
-          </div>
+          <img src="https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/cdb64365-d7bf-41f9-85c0-39b1dd2dc03f.png" alt="СДС" className="h-10 w-10 object-contain" />
           <div className="flex flex-col leading-none">
             <span className="font-sans text-xl font-semibold tracking-tight text-foreground">СДС</span>
             <span className="font-sans text-[10px] text-foreground/60 tracking-wide">Расчёты для шахт и рудников</span>
