@@ -33,12 +33,8 @@ export function AboutSection({ scrollToSection }: { scrollToSection?: (index: nu
               }`}
               style={{ transitionDelay: "200ms" }}
             >
-              <p className="max-w-md text-sm leading-relaxed text-foreground/90 md:text-lg">
-                ВентКалк — профессиональное приложение для инженеров-проектировщиков систем вентиляции и кондиционирования воздуха.
-              </p>
-              <p className="max-w-md text-sm leading-relaxed text-foreground/90 md:text-lg">
-                Замените таблицы Excel на современный инструмент с актуальными нормами, каталогами оборудования и мгновенным формированием отчётов.
-              </p>
+              <p className="max-w-md text-sm leading-relaxed text-foreground/90 md:text-lg">СДС — профессиональное приложение для службы депрессионных съемок</p>
+              <p className="max-w-md text-sm leading-relaxed text-foreground/90 md:text-lg">Современный инструмент с актуальными нормами и мгновенным формированием отчётов.</p>
             </div>
           </div>
 
