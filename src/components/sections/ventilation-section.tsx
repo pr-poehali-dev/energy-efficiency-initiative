@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon"
 
 
 
-export function VentilationSection() {
+export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [L, setL] = useState("")
   const [result, setResult] = useState<number | null>(null)
@@ -27,8 +27,8 @@ export function VentilationSection() {
 
   return (
     <section
-      ref={ref}
-      className="flex h-screen w-screen shrink-0 snap-start items-center px-4 pt-20 md:px-12 md:pt-0 lg:px-16"
+      ref={(el) => { ref.current = el; sectionRef?.(el) }}
+      className="flex min-h-screen w-full items-center px-4 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div

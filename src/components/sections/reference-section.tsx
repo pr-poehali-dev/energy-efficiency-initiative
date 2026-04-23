@@ -112,7 +112,7 @@ const LOW_HEAT = [
   { name: "Солидол",                value: "37,2"     },
 ]
 
-export function ReferenceSection() {
+export function ReferenceSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.2)
   const [activeSimple, setActiveSimple] = useState(0)
   const [activeFireTab, setActiveFireTab] = useState<FireTabKey>("main")
@@ -120,10 +120,10 @@ export function ReferenceSection() {
 
   return (
     <section
-      ref={ref}
-      className="flex h-screen w-screen shrink-0 snap-start flex-col px-4 pt-20 pb-6 md:px-12 lg:px-16"
+      ref={(el) => { ref.current = el; sectionRef?.(el) }}
+      className="flex min-h-screen w-full flex-col px-4 py-24 pb-6 md:px-12 lg:px-16"
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col h-full">
+      <div className="mx-auto flex w-full max-w-7xl flex-col">
 
         {/* Header */}
         <div

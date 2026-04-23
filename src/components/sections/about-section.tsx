@@ -1,13 +1,13 @@
 import { MagneticButton } from "@/components/magnetic-button"
 import { useReveal } from "@/hooks/use-reveal"
 
-export function AboutSection({ scrollToSection }: { scrollToSection?: (index: number) => void }) {
+export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?: (index: number) => void; sectionRef?: (el: HTMLElement | null) => void }) {
   const { ref, isVisible } = useReveal(0.3)
 
   return (
     <section
-      ref={ref}
-      className="flex h-screen w-screen shrink-0 snap-start items-center px-4 pt-20 md:px-12 md:pt-0 lg:px-16"
+      ref={(el) => { ref.current = el; sectionRef?.(el) }}
+      className="flex min-h-screen w-full items-center px-4 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="grid gap-8 md:grid-cols-2 md:gap-16 lg:gap-24">

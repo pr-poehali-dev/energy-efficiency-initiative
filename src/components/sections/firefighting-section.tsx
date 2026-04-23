@@ -2,7 +2,7 @@ import { useReveal } from "@/hooks/use-reveal"
 import { useState } from "react"
 import Icon from "@/components/ui/icon"
 
-export function FirefightingSection() {
+export function FirefightingSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [S, setS] = useState("")
   const [result, setResult] = useState<{ qw: number; Qw: number } | null>(null)
@@ -26,8 +26,8 @@ export function FirefightingSection() {
 
   return (
     <section
-      ref={ref}
-      className="flex h-screen w-screen shrink-0 snap-start items-center px-4 pt-20 md:px-12 md:pt-0 lg:px-16"
+      ref={(el) => { ref.current = el; sectionRef?.(el) }}
+      className="flex min-h-screen w-full items-center px-4 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div
