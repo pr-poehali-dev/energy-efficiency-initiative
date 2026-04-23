@@ -59,9 +59,7 @@ export function ContactSection() {
                   <Mail className="h-3 w-3 text-foreground/60" />
                   <span className="font-mono text-xs text-foreground/60">Email</span>
                 </div>
-                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-2xl">
-                  info@ventkalk.ru
-                </p>
+                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-2xl">delo.kpsk@vgsch.mchs.gov.ru</p>
               </a>
 
               <div
@@ -74,7 +72,7 @@ export function ContactSection() {
                   <MapPin className="h-3 w-3 text-foreground/60" />
                   <span className="font-mono text-xs text-foreground/60">Локация</span>
                 </div>
-                <p className="text-base text-foreground md:text-2xl">Москва, Россия</p>
+                <p className="text-base text-foreground md:text-2xl">Копейск, Россия</p>
               </div>
 
               <div
