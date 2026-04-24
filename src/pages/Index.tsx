@@ -191,7 +191,7 @@ export default function Index() {
                 variant="primary"
                 onClick={() => scrollToSection(1)}
               >
-                Попробовать бесплатно
+                Начать расчет
               </MagneticButton>
               <MagneticButton size="lg" variant="secondary" onClick={() => scrollToSection(4)}>
                 О нас
