@@ -591,6 +591,12 @@ export function FirefightingSection({ sectionRef }: { sectionRef?: (el: HTMLElem
           }`}
           style={{ transitionDelay: "300ms" }}
         >
+          <div className="mb-8 border-b border-foreground/10 pb-6">
+            <p className="font-mono text-xs uppercase tracking-widest text-foreground/40 mb-1">Расчёт</p>
+            <h3 className="font-sans text-2xl font-light text-foreground md:text-3xl">
+              {TABS.find((t) => t.key === activeTab)?.label}
+            </h3>
+          </div>
           <ActiveContent />
         </div>
       </div>
