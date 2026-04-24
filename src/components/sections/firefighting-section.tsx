@@ -1,6 +1,7 @@
 import { useReveal } from "@/hooks/use-reveal"
 import { useState } from "react"
 import Icon from "@/components/ui/icon"
+import { exportToWord, exportToExcel, ExportData } from "@/lib/export-utils"
 
 type TabKey = "trunks" | "flow" | "hoses" | "flood" | "foam" | "volume" | "area" | "resistance"
 
@@ -39,6 +40,27 @@ function ResultRow({ label, value, unit }: { label: string; value: string; unit:
       <p className="font-sans text-3xl font-light text-foreground md:text-4xl">
         {value} <span className="text-xl text-foreground/60">{unit}</span>
       </p>
+    </div>
+  )
+}
+
+function ExportButtons({ data }: { data: ExportData }) {
+  return (
+    <div className="flex gap-2 border-t border-foreground/10 pt-4 mt-2">
+      <button
+        onClick={() => exportToWord(data)}
+        className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+      >
+        <Icon name="FileText" size={14} />
+        Word
+      </button>
+      <button
+        onClick={() => exportToExcel(data)}
+        className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+      >
+        <Icon name="Table" size={14} />
+        Excel
+      </button>
     </div>
   )
 }
@@ -130,6 +152,19 @@ function TabTrunks() {
             <div className="border-t border-foreground/10 pt-2">
               <p className="font-mono text-xs text-foreground/40">Точное значение: {result.toFixed(2)}</p>
             </div>
+            <ExportButtons data={{
+              title: "Расчёт количества стволов",
+              formula: "Nств = Sп × Jн / qств",
+              inputs: [
+                { label: "Площадь пожара (Sп)", value: Sp, unit: "м²" },
+                { label: "Нормативная интенсивность (Jн)", value: Jn, unit: "л/(с·м²)" },
+                { label: "Расход одного ствола (qств)", value: qStv, unit: "л/с" },
+              ],
+              results: [
+                { label: "Количество стволов (Nств)", value: Math.ceil(result).toString(), unit: "шт." },
+                { label: "Точное значение", value: result.toFixed(2), unit: "шт." },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -169,6 +204,18 @@ function TabFlow() {
             <div className="border-t border-foreground/10 pt-2">
               <ResultRow label="" value={(result * 3.6).toFixed(2)} unit="м³/ч" />
             </div>
+            <ExportButtons data={{
+              title: "Расчёт требуемого расхода воды",
+              formula: "Qтр = Sп × Jн",
+              inputs: [
+                { label: "Площадь пожара (Sп)", value: Sp, unit: "м²" },
+                { label: "Нормативная интенсивность (Jн)", value: Jn, unit: "л/(с·м²)" },
+              ],
+              results: [
+                { label: "Требуемый расход (Qтр)", value: result.toFixed(3), unit: "л/с" },
+                { label: "Требуемый расход (Qтр)", value: (result * 3.6).toFixed(2), unit: "м³/ч" },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -208,6 +255,18 @@ function TabHoses() {
             <div className="border-t border-foreground/10 pt-2">
               <p className="font-mono text-xs text-foreground/40">Точное значение: {result.toFixed(2)}</p>
             </div>
+            <ExportButtons data={{
+              title: "Расчёт количества пожарных рукавов",
+              formula: "n = 1,2 × L / lp",
+              inputs: [
+                { label: "Расстояние до водоисточника (L)", value: L, unit: "м" },
+                { label: "Длина одного рукава (lp)", value: lp, unit: "м" },
+              ],
+              results: [
+                { label: "Количество рукавов (n)", value: Math.ceil(result).toString(), unit: "шт." },
+                { label: "Точное значение", value: result.toFixed(2), unit: "шт." },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -247,6 +306,18 @@ function TabFlood() {
             <div className="border-t border-foreground/10 pt-2">
               <ResultRow label="" value={(result * 60).toFixed(0)} unit="мин" />
             </div>
+            <ExportButtons data={{
+              title: "Расчёт времени затопления выработки",
+              formula: "t = V / q",
+              inputs: [
+                { label: "Объём выработки (V)", value: V, unit: "м³" },
+                { label: "Скорость заполнения (q)", value: q, unit: "м³/ч" },
+              ],
+              results: [
+                { label: "Время затопления (t)", value: result.toFixed(2), unit: "ч" },
+                { label: "Время затопления (t)", value: (result * 60).toFixed(0), unit: "мин" },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -286,6 +357,18 @@ function TabFoam() {
             <div className="border-t border-foreground/10 pt-2">
               <ResultRow label="" value={(result * 3.6).toFixed(2)} unit="м³/ч" />
             </div>
+            <ExportButtons data={{
+              title: "Расчёт расхода пенообразователя",
+              formula: "Qтр = Jн × Sп",
+              inputs: [
+                { label: "Площадь пожара (Sп)", value: Sp, unit: "м²" },
+                { label: "Нормативная интенсивность (Jн)", value: Jn, unit: "л/(с·м²)" },
+              ],
+              results: [
+                { label: "Расход пенообразователя (Qтр)", value: result.toFixed(3), unit: "л/с" },
+                { label: "Расход пенообразователя (Qтр)", value: (result * 3.6).toFixed(2), unit: "м³/ч" },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -326,6 +409,18 @@ function TabVolume() {
         {result !== null && (
           <ResultBox>
             <ResultRow label="Объём выработки V" value={result.toFixed(2)} unit="м³" />
+            <ExportButtons data={{
+              title: "Расчёт объёма выработки",
+              formula: "V = A × B × C",
+              inputs: [
+                { label: "Длина (A)", value: A, unit: "м" },
+                { label: "Ширина (B)", value: B, unit: "м" },
+                { label: "Высота (C)", value: C, unit: "м" },
+              ],
+              results: [
+                { label: "Объём выработки (V)", value: result.toFixed(2), unit: "м³" },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -362,6 +457,17 @@ function TabArea() {
         {result !== null && (
           <ResultBox>
             <ResultRow label="Площадь пожара Sп" value={result.toFixed(2)} unit="м²" />
+            <ExportButtons data={{
+              title: "Расчёт площади пожара",
+              formula: "Sп = A × B",
+              inputs: [
+                { label: "Длина охваченного участка (A)", value: A, unit: "м" },
+                { label: "Ширина охваченного участка (B)", value: B, unit: "м" },
+              ],
+              results: [
+                { label: "Площадь пожара (Sп)", value: result.toFixed(2), unit: "м²" },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>
@@ -402,6 +508,18 @@ function TabResistance() {
         {result !== null && (
           <ResultBox>
             <ResultRow label="Потери напора h" value={result.toFixed(3)} unit="м вод. ст." />
+            <ExportButtons data={{
+              title: "Расчёт сопротивления рукавной линии",
+              formula: "h = n × Sp × Q²",
+              inputs: [
+                { label: "Количество рукавов (n)", value: n, unit: "шт." },
+                { label: "Сопротивление рукава (Sp)", value: Sp, unit: "" },
+                { label: "Расход воды (Q)", value: Q, unit: "л/с" },
+              ],
+              results: [
+                { label: "Потери напора (h)", value: result.toFixed(3), unit: "м вод. ст." },
+              ],
+            }} />
           </ResultBox>
         )}
       </div>

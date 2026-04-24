@@ -1,8 +1,7 @@
 import { useReveal } from "@/hooks/use-reveal"
 import { useState } from "react"
 import Icon from "@/components/ui/icon"
-
-
+import { exportToWord, exportToExcel } from "@/lib/export-utils"
 
 export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
@@ -24,6 +23,20 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
     setResult(null)
     setCalculated(false)
   }
+
+  const getExportData = () => ({
+    title: "Расчёт площади сечения канала вентиляции",
+    formula: "F = (L / 3600) × Vс",
+    inputs: [
+      { label: "Подача ГВУ (L)", value: L, unit: "м³/ч" },
+      { label: "Скорость принудит. проветривания (Vс)", value: "3", unit: "м/с" },
+    ],
+    results: result !== null ? [
+      { label: "Площадь сечения канала (F)", value: result.toFixed(4), unit: "м²" },
+      { label: "Площадь сечения канала (F)", value: (result * 10000).toFixed(2), unit: "см²" },
+      { label: "Площадь сечения канала (F)", value: (result * 1000000).toFixed(0), unit: "мм²" },
+    ] : [],
+  })
 
   return (
     <section
@@ -117,9 +130,7 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
               </div>
 
               {result !== null && (
-                <div
-                  className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6"
-                >
+                <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
                   <p className="mb-1 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
                   <p className="font-sans text-4xl font-light text-foreground md:text-5xl">
                     {result.toFixed(4)} <span className="text-2xl text-foreground/60">м²</span>
@@ -127,6 +138,23 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
                   <p className="mt-2 font-mono text-xs text-foreground/50">
                     {(result * 10000).toFixed(2)} см² · {(result * 1000000).toFixed(0)} мм²
                   </p>
+
+                  <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+                    <button
+                      onClick={() => exportToWord(getExportData())}
+                      className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+                    >
+                      <Icon name="FileText" size={14} />
+                      Word
+                    </button>
+                    <button
+                      onClick={() => exportToExcel(getExportData())}
+                      className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+                    >
+                      <Icon name="Sheet" size={14} fallback="Table" />
+                      Excel
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
