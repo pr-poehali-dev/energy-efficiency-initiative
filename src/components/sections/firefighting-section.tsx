@@ -572,7 +572,7 @@ export function FirefightingSection({ sectionRef }: { sectionRef?: (el: HTMLElem
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`rounded-lg px-4 py-2 font-mono text-xs transition-all duration-200 ${
+                className={`rounded-lg px-4 py-2.5 font-mono text-xs sm:text-xs transition-all duration-200 min-w-[4.5rem] sm:min-w-0 ${
                   activeTab === tab.key
                     ? "bg-foreground text-background"
                     : "border border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"
