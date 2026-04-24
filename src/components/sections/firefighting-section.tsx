@@ -5,15 +5,15 @@ import { exportToWord, exportToExcel, ExportData } from "@/lib/export-utils"
 
 type TabKey = "trunks" | "flow" | "hoses" | "flood" | "foam" | "volume" | "area" | "resistance"
 
-const TABS: { key: TabKey; label: string; full?: string; short: string }[] = [
-  { key: "trunks",     label: "Кол-во стволов",       short: "Стволы" },
-  { key: "flow",       label: "Требуемый расход",      short: "Расход" },
-  { key: "hoses",      label: "Кол-во рукавов",        full: "Количество пожарных рукавов от водоисточника до места пожара", short: "Рукава" },
-  { key: "flood",      label: "Время затопления",      short: "Затопл." },
-  { key: "foam",       label: "Расход пенообразователя", short: "Пена" },
-  { key: "volume",     label: "Объём выработки",       short: "Объём" },
-  { key: "area",       label: "Площадь пожара",        short: "Площадь" },
-  { key: "resistance", label: "Сопротивление линии",   short: "Сопротивл." },
+const TABS: { key: TabKey; label: string; full: string; short: string }[] = [
+  { key: "trunks",     label: "Кол-во стволов",         full: "Количество стволов для тушения пожара",                              short: "Стволы" },
+  { key: "flow",       label: "Требуемый расход",        full: "Требуемый расход воды на тушение пожара",                           short: "Расход" },
+  { key: "hoses",      label: "Кол-во рукавов",          full: "Количество пожарных рукавов от водоисточника до места пожара",       short: "Рукава" },
+  { key: "flood",      label: "Время затопления",        full: "Время затопления горной выработки",                                 short: "Затопл." },
+  { key: "foam",       label: "Расход пенообразователя", full: "Требуемый расход раствора пенообразователя",                        short: "Пена" },
+  { key: "volume",     label: "Объём выработки",         full: "Объём горной выработки",                                           short: "Объём" },
+  { key: "area",       label: "Площадь пожара",          full: "Площадь пожара в горной выработке",                                short: "Площадь" },
+  { key: "resistance", label: "Сопротивление линии",     full: "Потери напора в рукавной линии",                                   short: "Сопротивл." },
 ]
 
 function NumInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
@@ -594,7 +594,7 @@ export function FirefightingSection({ sectionRef }: { sectionRef?: (el: HTMLElem
           <div className="mb-8 border-b border-foreground/10 pb-6">
             <p className="font-mono text-xs uppercase tracking-widest text-foreground/40 mb-1">Расчёт</p>
             <h3 className="font-sans text-2xl font-light text-foreground md:text-3xl">
-              {TABS.find((t) => t.key === activeTab)?.full ?? TABS.find((t) => t.key === activeTab)?.label}
+              {TABS.find((t) => t.key === activeTab)?.full}
             </h3>
           </div>
           <ActiveContent />
