@@ -8,7 +8,7 @@ type TabKey = "trunks" | "flow" | "hoses" | "flood" | "foam" | "volume" | "area"
 const TABS: { key: TabKey; label: string; short: string }[] = [
   { key: "trunks",     label: "Кол-во стволов",       short: "Стволы" },
   { key: "flow",       label: "Требуемый расход",      short: "Расход" },
-  { key: "hoses",      label: "Кол-во рукавов",        short: "Рукава" },
+  { key: "hoses",      label: "Количество пожарных рукавов от водоисточника до места пожара", short: "Рукава" },
   { key: "flood",      label: "Время затопления",      short: "Затопл." },
   { key: "foam",       label: "Расход пенообразователя", short: "Пена" },
   { key: "volume",     label: "Объём выработки",       short: "Объём" },
