@@ -6,14 +6,14 @@ import { exportToWord, exportToExcel, ExportData } from "@/lib/export-utils"
 type TabKey = "trunks" | "flow" | "hoses" | "flood" | "foam" | "volume" | "area" | "resistance"
 
 const TABS: { key: TabKey; label: string; short: string }[] = [
-  { key: "trunks",     label: "Кол-во стволов",       short: "Nств" },
-  { key: "flow",       label: "Требуемый расход",      short: "Qтр" },
-  { key: "hoses",      label: "Кол-во рукавов",        short: "n" },
-  { key: "flood",      label: "Время затопления",      short: "t" },
-  { key: "foam",       label: "Расход пенообразователя", short: "Qпен" },
-  { key: "volume",     label: "Объём выработки",       short: "V" },
-  { key: "area",       label: "Площадь пожара",        short: "Sп" },
-  { key: "resistance", label: "Сопротивление линии",   short: "h" },
+  { key: "trunks",     label: "Кол-во стволов",       short: "Стволы" },
+  { key: "flow",       label: "Требуемый расход",      short: "Расход" },
+  { key: "hoses",      label: "Кол-во рукавов",        short: "Рукава" },
+  { key: "flood",      label: "Время затопления",      short: "Затопл." },
+  { key: "foam",       label: "Расход пенообразователя", short: "Пена" },
+  { key: "volume",     label: "Объём выработки",       short: "Объём" },
+  { key: "area",       label: "Площадь пожара",        short: "Площадь" },
+  { key: "resistance", label: "Сопротивление линии",   short: "Сопротивл." },
 ]
 
 function NumInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
