@@ -216,6 +216,7 @@ export default function Index() {
         <ReferenceSection sectionRef={(el) => { sectionRefs.current[4] = el }} />
         <ContactSection sectionRef={(el) => { sectionRefs.current[5] = el }} />
       </div>
+      <style>{`section { scroll-margin-top: 80px; }`}</style>
     </main>
   )
 }
