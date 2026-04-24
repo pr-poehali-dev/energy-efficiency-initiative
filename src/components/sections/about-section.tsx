@@ -85,6 +85,20 @@ export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?
         </div>
 
         {/* — Контакты — */}
+        <div>
+          <div
+            className={`mb-10 transition-all duration-700 md:mb-14 ${
+              isVisible ? "translate-y-0 opacity-100" : "-translate-y-12 opacity-0"
+            }`}
+            style={{ transitionDelay: "50ms" }}
+          >
+            <h2 className="mb-2 font-sans text-5xl font-light tracking-tight text-foreground md:text-6xl lg:text-7xl">
+              Контакты
+            </h2>
+            <p className="font-mono text-sm text-foreground/60 md:text-base">/ Напишите нам</p>
+          </div>
+        </div>
+
         <div className="grid gap-8 md:grid-cols-[1.2fr_1fr] md:gap-16 lg:gap-24">
           <div className="flex flex-col justify-center">
             <div
