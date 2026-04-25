@@ -209,9 +209,21 @@ export default function Index() {
           </div>
         </section>
 
+        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
+        </div>
         <VentilationSection sectionRef={(el) => { sectionRefs.current[1] = el }} />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
+        </div>
         <FirefightingSection sectionRef={(el) => { sectionRefs.current[2] = el }} />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
+        </div>
         <ReferenceSection sectionRef={(el) => { sectionRefs.current[3] = el }} />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
+        </div>
         <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[4] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
