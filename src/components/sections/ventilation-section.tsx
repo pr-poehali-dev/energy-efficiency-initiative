@@ -105,7 +105,7 @@ function AreaCalculator() {
           <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
             <p className="mb-1 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
             <p className="font-sans text-4xl font-light text-foreground md:text-5xl">
-              {result.toFixed(4)} <span className="text-2xl text-foreground/60">м²</span>
+              {result.toFixed(2)} <span className="text-2xl text-foreground/60">м²</span>
             </p>
             <p className="mt-2 font-mono text-xs text-foreground/50">
               {(result * 10000).toFixed(2)} см² · {(result * 1000000).toFixed(0)} мм²
