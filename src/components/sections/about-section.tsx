@@ -113,7 +113,7 @@ export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?
 
             <div className="space-y-4 md:space-y-8">
               <a
-                href="mailto:delo.kpsk@vgsch.mchs.gov.ru"
+                href="mailto:sds.kpsk@vgsch.mchs.gov.ru"
                 className={`group block transition-all duration-700 ${
                   isVisible ? "translate-x-0 opacity-100" : "-translate-x-16 opacity-0"
                 }`}
@@ -121,9 +121,23 @@ export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?
               >
                 <div className="mb-1 flex items-center gap-2">
                   <Mail className="h-3 w-3 text-foreground/60" />
-                  <span className="font-mono text-xs text-foreground/60">Email</span>
+                  <span className="font-mono text-xs text-foreground/60">Служба ДС</span>
                 </div>
-                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-2xl">delo.kpsk@vgsch.mchs.gov.ru</p>
+                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-xl">sds.kpsk@vgsch.mchs.gov.ru</p>
+              </a>
+
+              <a
+                href="mailto:delo.kpsk@vgsch.mchs.gov.ru"
+                className={`group block transition-all duration-700 ${
+                  isVisible ? "translate-x-0 opacity-100" : "-translate-x-16 opacity-0"
+                }`}
+                style={{ transitionDelay: "325ms" }}
+              >
+                <div className="mb-1 flex items-center gap-2">
+                  <Mail className="h-3 w-3 text-foreground/60" />
+                  <span className="font-mono text-xs text-foreground/60">Приёмная</span>
+                </div>
+                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-xl">delo.kpsk@vgsch.mchs.gov.ru</p>
               </a>
 
               <div
