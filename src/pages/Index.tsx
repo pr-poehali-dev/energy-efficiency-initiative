@@ -10,6 +10,19 @@ import { useRef, useEffect, useState } from "react"
 
 const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "about"]
 
+function SectionDivider({ index, label }: { index: number; label: string }) {
+  return (
+    <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+      <div className="flex items-center gap-4">
+        <span className="font-mono text-[10px] text-foreground/30 tracking-widest uppercase shrink-0">
+          {String(index).padStart(2, "0")} / {label}
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-foreground/20 to-transparent" />
+      </div>
+    </div>
+  )
+}
+
 export default function Index() {
   const [currentSection, setCurrentSection] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -209,21 +222,13 @@ export default function Index() {
           </div>
         </section>
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
-        </div>
+        <SectionDivider index={1} label="Вентиляция" />
         <VentilationSection sectionRef={(el) => { sectionRefs.current[1] = el }} />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
-        </div>
+        <SectionDivider index={2} label="Пожаротушение" />
         <FirefightingSection sectionRef={(el) => { sectionRefs.current[2] = el }} />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
-        </div>
+        <SectionDivider index={3} label="Справочник" />
         <ReferenceSection sectionRef={(el) => { sectionRefs.current[3] = el }} />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
-        </div>
+        <SectionDivider index={4} label="О нас" />
         <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[4] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
