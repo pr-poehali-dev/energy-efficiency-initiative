@@ -30,6 +30,7 @@ export default function Index() {
   const [currentSection, setCurrentSection] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [calcDropdownOpen, setCalcDropdownOpen] = useState(false)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
   const scrollThrottleRef = useRef<number>()
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
@@ -160,22 +161,72 @@ export default function Index() {
         </button>
 
         <div className="hidden items-center gap-8 md:flex">
-          {["Главная", "Вентиляция", "Пожаротушение", "Справочник", "Взрываемость", "О нас"].map((item, index) => (
+          {/* Главная */}
+          <button
+            onClick={() => scrollToSection(0)}
+            className={`group relative font-sans text-sm font-medium transition-colors ${
+              currentSection === 0 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+            }`}
+          >
+            Главная
+            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 0 ? "w-full" : "w-0 group-hover:w-full"}`} />
+          </button>
+
+          {/* Расчёты — дропдаун */}
+          <div className="relative" onMouseEnter={() => setCalcDropdownOpen(true)} onMouseLeave={() => setCalcDropdownOpen(false)}>
             <button
-              key={item}
-              onClick={() => scrollToSection(index)}
-              className={`group relative font-sans text-sm font-medium transition-colors ${
-                currentSection === index ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+              className={`group relative font-sans text-sm font-medium transition-colors flex items-center gap-1 ${
+                [1, 2, 4].includes(currentSection) ? "text-foreground" : "text-foreground/80 hover:text-foreground"
               }`}
             >
-              {item}
-              <span
-                className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${
-                  currentSection === index ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-              />
+              Расчёты
+              <Icon name="ChevronDown" size={14} className={`transition-transform duration-200 ${calcDropdownOpen ? "rotate-180" : ""}`} />
+              <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${[1, 2, 4].includes(currentSection) ? "w-full" : "w-0 group-hover:w-full"}`} />
             </button>
-          ))}
+            {calcDropdownOpen && (
+              <div className="absolute left-0 top-full pt-3 z-50">
+                <div className="rounded-xl border border-foreground/10 bg-background/95 backdrop-blur-md shadow-lg overflow-hidden min-w-[180px]">
+                  {[
+                    { label: "Вентиляция", index: 1 },
+                    { label: "Пожаротушение", index: 2 },
+                    { label: "Взрываемость", index: 4 },
+                  ].map(({ label, index }) => (
+                    <button
+                      key={label}
+                      onClick={() => { scrollToSection(index); setCalcDropdownOpen(false) }}
+                      className={`w-full text-left px-4 py-2.5 font-sans text-sm transition-colors ${
+                        currentSection === index ? "bg-foreground/10 text-foreground" : "text-foreground/75 hover:bg-foreground/5 hover:text-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Справочник */}
+          <button
+            onClick={() => scrollToSection(3)}
+            className={`group relative font-sans text-sm font-medium transition-colors ${
+              currentSection === 3 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+            }`}
+          >
+            Справочник
+            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 3 ? "w-full" : "w-0 group-hover:w-full"}`} />
+          </button>
+
+          {/* О нас */}
+          <button
+            onClick={() => scrollToSection(5)}
+            className={`group relative font-sans text-sm font-medium transition-colors ${
+              currentSection === 5 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+            }`}
+          >
+            О нас
+            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 5 ? "w-full" : "w-0 group-hover:w-full"}`} />
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -195,9 +246,9 @@ export default function Index() {
         {mobileMenuOpen && (
           <div className="absolute left-0 right-0 top-full border-b border-foreground/10 bg-background/95 backdrop-blur-md md:hidden">
             <div className="flex flex-col px-6 py-4 gap-1">
-              {["Главная", "Вентиляция", "Пожаротушение", "Справочник", "Взрываемость", "О нас"].map((item, index) => (
+              {[{ label: "Главная", index: 0 }, { label: "Справочник", index: 3 }, { label: "О нас", index: 5 }].map(({ label, index }) => (
                 <button
-                  key={item}
+                  key={label}
                   onClick={() => { scrollToSection(index); setMobileMenuOpen(false) }}
                   className={`text-left px-3 py-2.5 rounded-lg font-sans text-sm transition-colors ${
                     currentSection === index
@@ -205,7 +256,22 @@ export default function Index() {
                       : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
                   }`}
                 >
-                  {item}
+                  {label}
+                </button>
+              ))}
+              <div className="my-1 h-px bg-foreground/10" />
+              <span className="px-3 py-1 font-sans text-[10px] uppercase tracking-widest text-foreground/40">Расчёты</span>
+              {[{ label: "Вентиляция", index: 1 }, { label: "Пожаротушение", index: 2 }, { label: "Взрываемость", index: 4 }].map(({ label, index }) => (
+                <button
+                  key={label}
+                  onClick={() => { scrollToSection(index); setMobileMenuOpen(false) }}
+                  className={`text-left px-3 py-2.5 rounded-lg font-sans text-sm transition-colors ${
+                    currentSection === index
+                      ? "bg-foreground/10 text-foreground"
+                      : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
               <div className="my-2 h-px bg-foreground/10" />
