@@ -155,7 +155,7 @@ export default function Index() {
           <img src="https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/cdb64365-d7bf-41f9-85c0-39b1dd2dc03f.png" alt="СДС" className="h-10 w-10 object-contain" />
           <div className="flex flex-col items-start leading-tight">
             <span className="font-sans text-xl font-semibold tracking-tight text-foreground">СДС</span>
-            <span className="font-sans text-[10px] text-foreground/60 tracking-wide -mt-0.5">Расчёты для шахт и рудников</span>
+            <span className="font-sans text-[10px] text-foreground/60 tracking-wide -mt-0.5 whitespace-nowrap">Расчёты для шахт и рудников</span>
           </div>
         </button>
 
