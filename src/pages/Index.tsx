@@ -7,6 +7,7 @@ import { FirefightingSection } from "@/components/sections/firefighting-section"
 import { ReferenceSection } from "@/components/sections/reference-section"
 import { MagneticButton } from "@/components/magnetic-button"
 import { useRef, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "about"]
 
@@ -24,6 +25,7 @@ function SectionDivider({ index, label }: { index: number; label: string }) {
 }
 
 export default function Index() {
+  const navigate = useNavigate()
   const [currentSection, setCurrentSection] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
@@ -174,6 +176,12 @@ export default function Index() {
           ))}
         </div>
 
+        <button
+          onClick={() => navigate("/explosion-triangle")}
+          className="font-mono text-xs text-foreground/60 hover:text-foreground transition-colors border border-foreground/20 hover:border-foreground/40 rounded-lg px-4 py-2"
+        >
+          Треугольник взрываемости
+        </button>
         <MagneticButton variant="secondary" onClick={() => scrollToSection(1)}>
           Попробовать
         </MagneticButton>
