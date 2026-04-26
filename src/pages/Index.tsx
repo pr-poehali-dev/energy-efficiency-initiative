@@ -230,7 +230,7 @@ export default function Index() {
         </div>
 
         <div className="flex items-center gap-3">
-          <MagneticButton variant="secondary" onClick={() => scrollToSection(1)}>
+          <MagneticButton variant="secondary" onClick={() => scrollToSection(1)} className="px-3 py-2 text-xs md:px-6 md:py-2.5 md:text-sm">
             Попробовать
           </MagneticButton>
           <button
