@@ -10,7 +10,7 @@ import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "@/components/ui/icon"
 
-const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "explosion", "about"]
+const SECTION_IDS = ["hero", "ventilation", "firefighting", "explosion", "reference", "about"]
 
 function SectionDivider({ index, label }: { index: number; label: string }) {
   return (
@@ -176,12 +176,12 @@ export default function Index() {
           <div className="relative" onMouseEnter={() => setCalcDropdownOpen(true)} onMouseLeave={() => setCalcDropdownOpen(false)}>
             <button
               className={`group relative font-sans text-sm font-medium transition-colors flex items-center gap-1 ${
-                [1, 2, 4].includes(currentSection) ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+                [1, 2, 3].includes(currentSection) ? "text-foreground" : "text-foreground/80 hover:text-foreground"
               }`}
             >
               Расчёты
               <Icon name="ChevronDown" size={14} className={`transition-transform duration-200 ${calcDropdownOpen ? "rotate-180" : ""}`} />
-              <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${[1, 2, 4].includes(currentSection) ? "w-full" : "w-0 group-hover:w-full"}`} />
+              <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${[1, 2, 3].includes(currentSection) ? "w-full" : "w-0 group-hover:w-full"}`} />
             </button>
             {calcDropdownOpen && (
               <div className="absolute left-0 top-full pt-3 z-50">
@@ -189,7 +189,7 @@ export default function Index() {
                   {[
                     { label: "Вентиляция", index: 1 },
                     { label: "Пожаротушение", index: 2 },
-                    { label: "Взрываемость", index: 4 },
+                    { label: "Взрываемость", index: 3 },
                   ].map(({ label, index }) => (
                     <button
                       key={label}
@@ -208,13 +208,13 @@ export default function Index() {
 
           {/* Справочник */}
           <button
-            onClick={() => scrollToSection(3)}
+            onClick={() => scrollToSection(4)}
             className={`group relative font-sans text-sm font-medium transition-colors ${
-              currentSection === 3 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+              currentSection === 4 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
             }`}
           >
             Справочник
-            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 3 ? "w-full" : "w-0 group-hover:w-full"}`} />
+            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 4 ? "w-full" : "w-0 group-hover:w-full"}`} />
           </button>
 
           {/* О нас */}
@@ -246,7 +246,7 @@ export default function Index() {
         {mobileMenuOpen && (
           <div className="absolute left-0 right-0 top-full border-b border-foreground/10 bg-background/95 backdrop-blur-md md:hidden">
             <div className="flex flex-col px-6 py-4 gap-1">
-              {[{ label: "Главная", index: 0 }, { label: "Справочник", index: 3 }, { label: "О нас", index: 5 }].map(({ label, index }) => (
+              {[{ label: "Главная", index: 0 }, { label: "Справочник", index: 4 }, { label: "О нас", index: 5 }].map(({ label, index }) => (
                 <button
                   key={label}
                   onClick={() => { scrollToSection(index); setMobileMenuOpen(false) }}
@@ -261,7 +261,7 @@ export default function Index() {
               ))}
               <div className="my-1 h-px bg-foreground/10" />
               <span className="px-3 py-1 font-sans text-[10px] uppercase tracking-widest text-foreground/40">Расчёты</span>
-              {[{ label: "Вентиляция", index: 1 }, { label: "Пожаротушение", index: 2 }, { label: "Взрываемость", index: 4 }].map(({ label, index }) => (
+              {[{ label: "Вентиляция", index: 1 }, { label: "Пожаротушение", index: 2 }, { label: "Взрываемость", index: 3 }].map(({ label, index }) => (
                 <button
                   key={label}
                   onClick={() => { scrollToSection(index); setMobileMenuOpen(false) }}
@@ -334,12 +334,10 @@ export default function Index() {
         <VentilationSection sectionRef={(el) => { sectionRefs.current[1] = el }} />
         <SectionDivider index={2} label="Пожаротушение" />
         <FirefightingSection sectionRef={(el) => { sectionRefs.current[2] = el }} />
-        <SectionDivider index={3} label="Справочник" />
-        <ReferenceSection sectionRef={(el) => { sectionRefs.current[3] = el }} />
-        <SectionDivider index={5} label="Взрываемость" />
+        <SectionDivider index={3} label="Взрываемость" />
         <section
           id="explosion"
-          ref={(el) => { sectionRefs.current[4] = el }}
+          ref={(el) => { sectionRefs.current[3] = el }}
           className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:px-12 lg:px-16"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -376,7 +374,9 @@ export default function Index() {
             ))}
           </div>
         </section>
-        <SectionDivider index={6} label="О нас" />
+        <SectionDivider index={4} label="Справочник" />
+        <ReferenceSection sectionRef={(el) => { sectionRefs.current[4] = el }} />
+        <SectionDivider index={5} label="О нас" />
         <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[5] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
