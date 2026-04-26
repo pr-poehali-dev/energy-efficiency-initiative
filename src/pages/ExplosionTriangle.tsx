@@ -68,17 +68,48 @@ function getConclusion(zone: Zone, gasName: string, gasPct: number, o2Pct: numbe
 
 // Треугольная диаграмма Гиббса (SVG)
 function GibbsTriangle({
-  gasPct, o2Pct, n2Pct, zone, lel, uel, lol
+  gasPct, o2Pct, n2Pct, zone, lel, uel, lol, onClickPoint
 }: {
   gasPct: number; o2Pct: number; n2Pct: number; zone: Zone | null;
   lel: number; uel: number; lol: number
+  onClickPoint?: (gas: number, o2: number, n2: number) => void
 }) {
+  const svgRef = useRef<SVGSVGElement>(null)
   const size = 400
   const pad = 48
   // Вершины равностороннего треугольника
   const top   = { x: size / 2,  y: pad }
   const left  = { x: pad,        y: size - pad }
   const right = { x: size - pad, y: size - pad }
+
+  // Клик по SVG → барицентрические координаты
+  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!onClickPoint || !svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    // Переводим пиксели экрана в координаты viewBox
+    const scaleX = size / rect.width
+    const scaleY = size / rect.height
+    const cx = (e.clientX - rect.left) * scaleX
+    const cy = (e.clientY - rect.top) * scaleY
+
+    // Решаем систему: cx = a*top.x + b*left.x + c*right.x, cy = ..., a+b+c=1
+    // Барицентрические координаты через формулу
+    const denom = (left.y - right.y) * (top.x - right.x) + (right.x - left.x) * (top.y - right.y)
+    if (Math.abs(denom) < 1e-6) return
+    const a = ((left.y - right.y) * (cx - right.x) + (right.x - left.x) * (cy - right.y)) / denom
+    const b = ((right.y - top.y)  * (cx - right.x) + (top.x  - right.x) * (cy - right.y)) / denom
+    const c = 1 - a - b
+
+    // Клик вне треугольника
+    if (a < 0 || b < 0 || c < 0) return
+
+    // a = газ, b = N₂, c = O₂  (top=газ, left=N₂, right=O₂)
+    onClickPoint(
+      Math.round(a * 1000) / 10,
+      Math.round(c * 1000) / 10,
+      Math.round(b * 1000) / 10
+    )
+  }
 
   // Нормализуем проценты (сумма = 100)
   const total = gasPct + o2Pct + n2Pct
@@ -102,7 +133,13 @@ function GibbsTriangle({
   const zoneColor = zone ? getZoneColor(zone) : "#888"
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[380px]" style={{ filter: "drop-shadow(0 0 20px rgba(0,0,0,0.5))" }}>
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${size} ${size}`}
+      className="w-full max-w-[380px]"
+      style={{ filter: "drop-shadow(0 0 20px rgba(0,0,0,0.5))", cursor: onClickPoint ? "crosshair" : "default" }}
+      onClick={handleSvgClick}
+    >
       {/* Фон треугольника */}
       <polygon
         points={`${top.x},${top.y} ${left.x},${left.y} ${right.x},${right.y}`}
@@ -390,7 +427,18 @@ export default function ExplosionTriangle() {
                 lel={selectedGas.lel}
                 uel={selectedGas.uel}
                 lol={selectedGas.lol}
+                onClickPoint={(g, o2, n2) => {
+                  setGasVal(String(g))
+                  setO2Val(String(o2))
+                  setN2Val(String(n2))
+                  const z = getZone(g, o2, selectedGas.lel, selectedGas.uel, selectedGas.lol)
+                  setZone(z)
+                  setCalculated(true)
+                }}
               />
+              <p className="mt-1 text-center font-mono text-[10px] text-foreground/30">
+                Кликните по треугольнику, чтобы выбрать точку состава
+              </p>
               {/* Легенда */}
               <div className="mt-4 grid grid-cols-2 gap-2 w-full text-xs font-mono">
                 {([
