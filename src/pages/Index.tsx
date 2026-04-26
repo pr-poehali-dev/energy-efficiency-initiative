@@ -9,7 +9,7 @@ import { MagneticButton } from "@/components/magnetic-button"
 import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "about"]
+const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "explosion", "about"]
 
 function SectionDivider({ index, label }: { index: number; label: string }) {
   return (
@@ -158,7 +158,7 @@ export default function Index() {
         </button>
 
         <div className="hidden items-center gap-8 md:flex">
-          {["Главная", "Вентиляция", "Пожаротушение", "Справочник", "О нас"].map((item, index) => (
+          {["Главная", "Вентиляция", "Пожаротушение", "Справочник", "Взрываемость", "О нас"].map((item, index) => (
             <button
               key={item}
               onClick={() => scrollToSection(index)}
@@ -176,12 +176,6 @@ export default function Index() {
           ))}
         </div>
 
-        <button
-          onClick={() => navigate("/explosion-triangle")}
-          className="font-mono text-xs text-foreground/60 hover:text-foreground transition-colors border border-foreground/20 hover:border-foreground/40 rounded-lg px-4 py-2"
-        >
-          Треугольник взрываемости
-        </button>
         <MagneticButton variant="secondary" onClick={() => scrollToSection(1)}>
           Попробовать
         </MagneticButton>
@@ -236,8 +230,48 @@ export default function Index() {
         <FirefightingSection sectionRef={(el) => { sectionRefs.current[2] = el }} />
         <SectionDivider index={3} label="Справочник" />
         <ReferenceSection sectionRef={(el) => { sectionRefs.current[3] = el }} />
-        <SectionDivider index={4} label="О нас" />
-        <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[4] = el }} />
+        <SectionDivider index={5} label="Взрываемость" />
+        <section
+          id="explosion"
+          ref={(el) => { sectionRefs.current[4] = el }}
+          className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:px-12 lg:px-16"
+        >
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-xl">
+              <p className="mb-2 font-mono text-xs text-foreground/40 uppercase tracking-widest">Анализ газовой смеси</p>
+              <h2 className="mb-3 font-sans text-4xl font-light tracking-tight text-foreground md:text-5xl">
+                Треугольник взрываемости
+              </h2>
+              <p className="text-foreground/60 text-base leading-relaxed">
+                Определение зоны взрываемости по трём параметрам: концентрация газа, O₂ и N₂.
+                Диаграмма Гиббса с интерактивным выбором точки состава.
+                Поддерживает метан, водород, угарный газ, этан, пропан и ацетилен.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/explosion-triangle")}
+              className="shrink-0 flex items-center gap-3 rounded-xl border border-foreground/20 bg-foreground/5 px-8 py-4 font-sans text-sm font-medium text-foreground transition-all hover:border-foreground/40 hover:bg-foreground/10"
+            >
+              Открыть расчёт
+              <span className="font-mono text-foreground/40">→</span>
+            </button>
+          </div>
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[
+              { label: "Метан CH₄",       lel: "5%",   uel: "15%" },
+              { label: "Водород H₂",      lel: "4%",   uel: "75%" },
+              { label: "Угарный газ CO",  lel: "12.5%",uel: "74%" },
+              { label: "Этан C₂H₆",      lel: "3%",   uel: "12.5%" },
+            ].map(({ label, lel, uel }) => (
+              <div key={label} className="rounded-lg border border-foreground/10 bg-foreground/5 px-4 py-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">{label}</p>
+                <p className="font-mono text-xs text-foreground/70">НПВ {lel} · ВПВ {uel}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <SectionDivider index={6} label="О нас" />
+        <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[5] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
     </main>
