@@ -8,6 +8,7 @@ import { ReferenceSection } from "@/components/sections/reference-section"
 import { MagneticButton } from "@/components/magnetic-button"
 import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import Icon from "@/components/ui/icon"
 
 const SECTION_IDS = ["hero", "ventilation", "firefighting", "reference", "explosion", "about"]
 
@@ -27,6 +28,7 @@ function SectionDivider({ index, label }: { index: number; label: string }) {
 export default function Index() {
   const navigate = useNavigate()
   const [currentSection, setCurrentSection] = useState(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
   const scrollThrottleRef = useRef<number>()
@@ -176,9 +178,47 @@ export default function Index() {
           ))}
         </div>
 
-        <MagneticButton variant="secondary" onClick={() => scrollToSection(1)}>
-          Попробовать
-        </MagneticButton>
+        <div className="flex items-center gap-3">
+          <MagneticButton variant="secondary" onClick={() => scrollToSection(1)}>
+            Попробовать
+          </MagneticButton>
+          <button
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="flex items-center justify-center rounded-lg border border-foreground/20 bg-foreground/5 p-2 text-foreground/70 transition-colors hover:border-foreground/40 hover:text-foreground md:hidden"
+            aria-label="Меню"
+          >
+            <Icon name={mobileMenuOpen ? "X" : "Menu"} size={18} />
+          </button>
+        </div>
+
+        {/* Мобильное меню */}
+        {mobileMenuOpen && (
+          <div className="absolute left-0 right-0 top-full border-b border-foreground/10 bg-background/95 backdrop-blur-md md:hidden">
+            <div className="flex flex-col px-6 py-4 gap-1">
+              {["Главная", "Вентиляция", "Пожаротушение", "Справочник", "Взрываемость", "О нас"].map((item, index) => (
+                <button
+                  key={item}
+                  onClick={() => { scrollToSection(index); setMobileMenuOpen(false) }}
+                  className={`text-left px-3 py-2.5 rounded-lg font-sans text-sm transition-colors ${
+                    currentSection === index
+                      ? "bg-foreground/10 text-foreground"
+                      : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+              <div className="my-2 h-px bg-foreground/10" />
+              <button
+                onClick={() => { navigate("/explosion-triangle"); setMobileMenuOpen(false) }}
+                className="text-left px-3 py-2.5 rounded-lg font-sans text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center justify-between"
+              >
+                <span>Треугольник взрываемости</span>
+                <Icon name="ExternalLink" size={14} className="text-foreground/40" />
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className={`relative z-10 transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
