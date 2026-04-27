@@ -793,6 +793,55 @@ function ExplosibilityCalculator() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+              <button
+                onClick={() => exportToWord({
+                  title: "Определение взрываемости смеси горючих газов (Боевой устав ВГСЧ 1996, Прил. 11)",
+                  formula: "C = CH4 + CO + H2; P_CH = CH4/C; P_CO = CO/C; P_H = H2/C",
+                  inputs: [
+                    { label: "Метан CH₄", value: ch4, unit: "%" },
+                    { label: "Окись углерода CO", value: co, unit: "%" },
+                    { label: "Водород H₂", value: h2, unit: "%" },
+                    { label: "Кислород O₂", value: o2, unit: "%" },
+                  ],
+                  results: [
+                    { label: "C (горючие газы)", value: result.C.toFixed(2), unit: "%" },
+                    { label: "P_CH₄", value: result.pch.toFixed(3), unit: "" },
+                    { label: "P_CO", value: result.pco.toFixed(3), unit: "" },
+                    { label: "P_H₂", value: result.ph.toFixed(3), unit: "" },
+                    { label: "Вывод", value: result.isExplosive ? "ВЗРЫВООПАСНА" : "НЕ ВЗРЫВООПАСНА", unit: "" },
+                  ],
+                })}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+              >
+                <Icon name="FileText" size={14} />
+                Word
+              </button>
+              <button
+                onClick={() => exportToExcel({
+                  title: "Определение взрываемости смеси горючих газов (Боевой устав ВГСЧ 1996, Прил. 11)",
+                  formula: "C = CH4 + CO + H2; P_CH = CH4/C; P_CO = CO/C; P_H = H2/C",
+                  inputs: [
+                    { label: "Метан CH₄", value: ch4, unit: "%" },
+                    { label: "Окись углерода CO", value: co, unit: "%" },
+                    { label: "Водород H₂", value: h2, unit: "%" },
+                    { label: "Кислород O₂", value: o2, unit: "%" },
+                  ],
+                  results: [
+                    { label: "C (горючие газы)", value: result.C.toFixed(2), unit: "%" },
+                    { label: "P_CH₄", value: result.pch.toFixed(3), unit: "" },
+                    { label: "P_CO", value: result.pco.toFixed(3), unit: "" },
+                    { label: "P_H₂", value: result.ph.toFixed(3), unit: "" },
+                    { label: "Вывод", value: result.isExplosive ? "ВЗРЫВООПАСНА" : "НЕ ВЗРЫВООПАСНА", unit: "" },
+                  ],
+                })}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+              >
+                <Icon name="Sheet" size={14} fallback="Table" />
+                Excel
+              </button>
+            </div>
           </div>
         )}
       </div>
