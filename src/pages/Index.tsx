@@ -187,7 +187,7 @@ export default function Index() {
             </button>
             {calcDropdownOpen && (
               <div className="absolute left-0 top-full pt-3 z-50">
-                <div className="rounded-xl border border-foreground/10 bg-background/95 backdrop-blur-md shadow-lg overflow-hidden min-w-[180px]">
+                <div className="rounded-xl border border-foreground/10 bg-background/95 backdrop-blur-md shadow-lg overflow-hidden min-w-[200px]">
                   {[
                     { label: "Вентиляция", index: 1 },
                     { label: "Пожаротушение", index: 2 },
@@ -203,6 +203,14 @@ export default function Index() {
                       {label}
                     </button>
                   ))}
+                  <div className="mx-3 h-px bg-foreground/10" />
+                  <button
+                    onClick={() => { navigate("/explosion-triangle"); setCalcDropdownOpen(false) }}
+                    className="w-full text-left px-4 py-2.5 font-sans text-sm text-foreground/75 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center justify-between gap-3"
+                  >
+                    <span>Треугольник взрываемости</span>
+                    <Icon name="ExternalLink" size={12} className="text-foreground/40 shrink-0" />
+                  </button>
                 </div>
               </div>
             )}
