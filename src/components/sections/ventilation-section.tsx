@@ -3,11 +3,12 @@ import { useState } from "react"
 import Icon from "@/components/ui/icon"
 import { exportToWord, exportToExcel } from "@/lib/export-utils"
 
-type TabKey = "area" | "resistance"
+type TabKey = "area" | "resistance" | "leakage"
 
 const TABS: { key: TabKey; label: string; full: string; short: string }[] = [
   { key: "area",       label: "Площадь сечения",           full: "Площадь сечения канала вентиляции",              short: "Сечение" },
   { key: "resistance", label: "Аэродин. сопротивление",    full: "Аэродинамическое сопротивление выработки",       short: "Сопротивл." },
+  { key: "leakage",    label: "Утечки надшахтного здания", full: "Нормативные утечки воздуха через надшахтное здание", short: "Утечки" },
 ]
 
 function AreaCalculator() {
@@ -307,6 +308,220 @@ function ResistanceCalculator() {
   )
 }
 
+const SHAFT_TABLE = {
+  skip: [
+    { area: "до 100",    qn: null,  kn: null  },
+    { area: "100–300",   qn: null,  kn: null  },
+    { area: "300–500",   qn: 670,   kn: 11.2  },
+    { area: "500–1000",  qn: 780,   kn: 13.0  },
+    { area: "более 1000",qn: 950,   kn: 15.8  },
+  ],
+  cage: [
+    { area: "до 100",    qn: 90,    kn: 1.5   },
+    { area: "100–300",   qn: 190,   kn: 3.2   },
+    { area: "300–500",   qn: 380,   kn: 6.3   },
+    { area: "500–1000",  qn: 690,   kn: 11.5  },
+    { area: "более 1000",qn: 850,   kn: 14.2  },
+  ],
+}
+
+function LeakageCalculator() {
+  const [shaftType, setShaftType] = useState<"skip" | "cage">("cage")
+  const [areaIdx, setAreaIdx] = useState<number>(0)
+  const [h, setH] = useState("")
+  const [result, setResult] = useState<{ qzd: number; qnh: number } | null>(null)
+  const [calculated, setCalculated] = useState(false)
+
+  const rows = SHAFT_TABLE[shaftType]
+  const selected = rows[areaIdx]
+
+  const handleCalculate = () => {
+    const hNum = parseFloat(h.replace(",", "."))
+    if (isNaN(hNum) || hNum <= 0 || selected.qn === null || selected.kn === null) return
+    const qnh = selected.qn + selected.kn * Math.sqrt(hNum)
+    const qzd = selected.qn * Math.sqrt(hNum / 200)
+    setResult({ qzd: parseFloat(qzd.toFixed(2)), qnh: parseFloat(qnh.toFixed(2)) })
+    setCalculated(true)
+  }
+
+  const handleReset = () => {
+    setH("")
+    setResult(null)
+    setCalculated(false)
+  }
+
+  const getExportData = () => ({
+    title: "Нормативные утечки воздуха через надшахтное здание",
+    formula: "Q_ут.зд = Q_ут.н × √(h / 200)",
+    inputs: [
+      { label: "Тип ствола", value: shaftType === "skip" ? "Скиповый" : "Клетевой", unit: "" },
+      { label: "Площадь наружных стен", value: rows[areaIdx].area, unit: "м²" },
+      { label: "Депрессия участка (h)", value: h, unit: "даПа" },
+    ],
+    results: result ? [
+      { label: "Нормативные утечки Q_ут.зд", value: String(result.qzd), unit: "м³/мин" },
+    ] : [],
+  })
+
+  const isReady = h && parseFloat(h) > 0 && selected.qn !== null
+
+  return (
+    <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
+      <div>
+        <div className="mb-6 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm md:p-8">
+          <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формула</p>
+          <p className="font-mono text-xl text-foreground md:text-2xl">Q_ут.зд = Q_ут.н × √(h / 200)</p>
+        </div>
+        <div className="space-y-3 text-sm text-foreground/70 md:text-base">
+          <div className="flex items-start gap-3">
+            <span className="mt-1 font-mono text-xs text-foreground/40 shrink-0">Q_ут.зд</span>
+            <span>Нормативные утечки через надшахтное здание, м³/мин</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="mt-1 font-mono text-xs text-foreground/40 shrink-0">Q_ут.н</span>
+            <span>Нормативные утечки (из таблицы 8.4), м³/мин</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="mt-1 font-mono text-xs text-foreground/40 shrink-0">h</span>
+            <span>Потеря депрессии на данном участке, даПа</span>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <p className="mb-3 font-mono text-xs text-foreground/40 uppercase tracking-widest">Табл. 8.4 — Нормы утечек (м³/мин)</p>
+          <div className="overflow-x-auto rounded-lg border border-foreground/10">
+            <table className="w-full text-xs font-mono">
+              <thead>
+                <tr className="border-b border-foreground/10 bg-foreground/5">
+                  <th className="px-3 py-2 text-left text-foreground/50">Площадь стен, м²</th>
+                  <th className="px-3 py-2 text-center text-foreground/50">Скиповый Q_н</th>
+                  <th className="px-3 py-2 text-center text-foreground/50">Клетевой Q_н</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SHAFT_TABLE.cage.map((row, i) => (
+                  <tr key={i} className="border-b border-foreground/5 last:border-0">
+                    <td className="px-3 py-2 text-foreground/70">{row.area}</td>
+                    <td className="px-3 py-2 text-center text-foreground/50">{SHAFT_TABLE.skip[i].qn ?? "—"}</td>
+                    <td className="px-3 py-2 text-center text-foreground/70">{row.qn ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <label className="mb-2 block font-mono text-xs text-foreground/60">Тип ствола</label>
+          <div className="flex gap-2">
+            {([["cage", "Клетевой"], ["skip", "Скиповый"]] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => { setShaftType(key); setCalculated(false); setResult(null) }}
+                className={`rounded-lg border px-4 py-2 font-sans text-sm transition-all ${
+                  shaftType === key
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block font-mono text-xs text-foreground/60">Площадь наружных стен и перекрытий, м²</label>
+          <div className="flex flex-col gap-2">
+            {rows.map((row, i) => (
+              <button
+                key={i}
+                onClick={() => { setAreaIdx(i); setCalculated(false); setResult(null) }}
+                disabled={row.qn === null}
+                className={`flex items-center justify-between rounded-lg border px-4 py-2.5 font-sans text-sm transition-all disabled:cursor-not-allowed disabled:opacity-30 ${
+                  areaIdx === i && row.qn !== null
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-foreground/15 text-foreground/60 hover:border-foreground/35 hover:text-foreground"
+                }`}
+              >
+                <span>{row.area}</span>
+                {row.qn !== null && (
+                  <span className={`font-mono text-xs ${areaIdx === i ? "text-background/60" : "text-foreground/35"}`}>
+                    Q_н = {row.qn} м³/мин
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block font-mono text-xs text-foreground/60">Депрессия участка — h, даПа</label>
+          <input
+            type="number"
+            value={h}
+            onChange={(e) => { setH(e.target.value); setCalculated(false) }}
+            min="0"
+            step="any"
+            placeholder="Например: 200"
+            className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none md:text-xl"
+          />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={handleCalculate}
+            disabled={!isReady}
+            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 font-sans text-sm font-medium text-background transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <Icon name="Calculator" size={16} />
+            Рассчитать
+          </button>
+          {calculated && (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 rounded-lg border border-foreground/20 px-5 py-3 font-sans text-sm text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+            >
+              <Icon name="RotateCcw" size={14} />
+              Сбросить
+            </button>
+          )}
+        </div>
+
+        {result !== null && (
+          <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
+            <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
+            <div>
+              <p className="font-mono text-xs text-foreground/40 mb-1">Нормативные утечки Q_ут.зд</p>
+              <p className="font-sans text-4xl font-light text-foreground md:text-5xl">
+                {result.qzd} <span className="text-xl text-foreground/60">м³/мин</span>
+              </p>
+            </div>
+            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+              <button
+                onClick={() => exportToWord(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+              >
+                <Icon name="FileText" size={14} />
+                Word
+              </button>
+              <button
+                onClick={() => exportToExcel(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+              >
+                <Icon name="Sheet" size={14} fallback="Table" />
+                Excel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [activeTab, setActiveTab] = useState<TabKey>("area")
@@ -365,6 +580,7 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
 
           {activeTab === "area" && <AreaCalculator />}
           {activeTab === "resistance" && <ResistanceCalculator />}
+          {activeTab === "leakage" && <LeakageCalculator />}
         </div>
       </div>
     </section>
