@@ -327,6 +327,7 @@ export default function Index() {
           ref={(el) => { sectionRefs.current[0] = el }}
           className="flex min-h-screen w-full flex-col justify-end px-6 pb-16 pt-24 md:px-12 md:pb-24"
         >
+          <div className="mx-auto w-full max-w-7xl">
           <div className="max-w-3xl">
             <div className="mb-4 inline-block animate-in fade-in slide-in-from-bottom-4 rounded-full border border-foreground/20 bg-foreground/15 px-4 py-1.5 backdrop-blur-md duration-700">
               <p className="font-mono text-xs text-foreground/90">Инженерное ПО для СДС и ГИО</p>
@@ -351,6 +352,7 @@ export default function Index() {
                 О нас
               </MagneticButton>
             </div>
+          </div>
           </div>
 
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-in fade-in duration-1000 delay-500">
