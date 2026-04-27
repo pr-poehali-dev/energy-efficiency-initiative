@@ -3,13 +3,16 @@ import { useState } from "react"
 import Icon from "@/components/ui/icon"
 import { exportToWord, exportToExcel } from "@/lib/export-utils"
 
-type TabKey = "area" | "resistance" | "leakage" | "explosion"
+type TabKey = "area" | "resistance" | "leakage" | "explosion" | "fire-index" | "inert-gas" | "depression"
 
 const TABS: { key: TabKey; label: string; full: string; short: string }[] = [
-  { key: "area",       label: "Площадь сечения",           full: "Площадь сечения канала вентиляции",              short: "Сечение" },
-  { key: "resistance", label: "Аэродин. сопротивление",    full: "Аэродинамическое сопротивление выработки",       short: "Сопротивл." },
-  { key: "leakage",    label: "Утечки надшахтного здания", full: "Нормативные утечки воздуха через надшахтное здание", short: "Утечки" },
-  { key: "explosion",  label: "Треугольник взрываемости",  full: "Определение взрываемости смеси горючих газов",   short: "Взрываемость" },
+  { key: "area",        label: "Площадь сечения",           full: "Площадь сечения канала вентиляции",                        short: "Сечение" },
+  { key: "resistance",  label: "Аэродин. сопротивление",    full: "Аэродинамическое сопротивление выработки",                 short: "Сопротивл." },
+  { key: "leakage",     label: "Утечки надшахтного здания", full: "Нормативные утечки воздуха через надшахтное здание",       short: "Утечки" },
+  { key: "explosion",   label: "Треугольник взрываемости",  full: "Определение взрываемости смеси горючих газов",             short: "Взрываемость" },
+  { key: "fire-index",  label: "Пожарное состояние",        full: "Индексы пожарного состояния атмосферы (Грэхем, Янг)",     short: "Пожар. индекс" },
+  { key: "inert-gas",   label: "Инертный газ",              full: "Расчёт подачи инертного газа для тушения пожара",          short: "Инерт. газ" },
+  { key: "depression",  label: "Депрессия шахты",           full: "Расчёт депрессии и количества воздуха в шахте",            short: "Депрессия" },
 ]
 
 function AreaCalculator() {
@@ -849,6 +852,505 @@ function ExplosibilityCalculator() {
   )
 }
 
+// ─── Индексы пожарного состояния атмосферы (Грэхем и Янг) ───────────────────
+function FireIndexCalculator() {
+  const [co, setCo]   = useState("")
+  const [o2, setO2]   = useState("")
+  const [co2, setCo2] = useState("")
+  const [n2, setN2]   = useState("")
+  const [calculated, setCalculated] = useState(false)
+  const [result, setResult] = useState<{ Ig: number; Iy: number; fireStage: string; igStatus: string; iyStatus: string } | null>(null)
+
+  // Индекс Грэхема: Ig = CO / (0.265 - O2/100 * (N2/79)) × 100
+  // Упрощённая формула применяемая в горноспасательной практике:
+  // Ig = CO / (0.265 - O2) — при O2 в долях; стандарт: Ig = CO*100 / (0.265*(21-O2))
+  // Индекс Янга: Iy = (CO2 + CO - CO2исх) / O2 * 100, исх CO2 ≈ 0.04%
+  const handleCalculate = () => {
+    const coN  = parseFloat(co.replace(",","."))
+    const o2N  = parseFloat(o2.replace(",","."))
+    const co2N = parseFloat(co2.replace(",","."))
+    if (isNaN(coN) || isNaN(o2N) || isNaN(co2N) || o2N <= 0) return
+    const defO2 = 21 - o2N
+    const Ig = defO2 > 0 ? parseFloat((coN / defO2).toFixed(4)) : 0
+    const co2excess = co2N - 0.04
+    const Iy = parseFloat(((co2excess + coN) / o2N * 100).toFixed(3))
+
+    let igStatus = ""
+    if (Ig < 0.1)      igStatus = "Пожара нет / начальная стадия"
+    else if (Ig < 0.5) igStatus = "Пожар в начальной стадии"
+    else if (Ig < 1.0) igStatus = "Активное горение"
+    else               igStatus = "Интенсивное горение"
+
+    let iyStatus = ""
+    if (Iy < 0.5)      iyStatus = "Пожара нет"
+    else if (Iy < 1.5) iyStatus = "Признаки самонагревания"
+    else if (Iy < 3.0) iyStatus = "Самонагревание / начало пожара"
+    else               iyStatus = "Активный пожар"
+
+    const fireStage = Ig >= 0.5 || Iy >= 1.5 ? "ПОЖАР" : "НЕТ ПРИЗНАКОВ ПОЖАРА"
+    setResult({ Ig, Iy, fireStage, igStatus, iyStatus })
+    setCalculated(true)
+  }
+
+  const handleReset = () => { setCo(""); setO2(""); setCo2(""); setN2(""); setResult(null); setCalculated(false) }
+  const isReady = co && o2 && co2 && parseFloat(o2) > 0
+
+  const getExportData = () => ({
+    title: "Индексы пожарного состояния атмосферы (Грэхем, Янг)",
+    formula: "Ig = CO / (21 - O2);  Iy = (CO2 + CO - 0.04) / O2 × 100",
+    inputs: [
+      { label: "CO", value: co, unit: "%" },
+      { label: "O₂", value: o2, unit: "%" },
+      { label: "CO₂", value: co2, unit: "%" },
+      { label: "N₂", value: n2 || "—", unit: "%" },
+    ],
+    results: result ? [
+      { label: "Индекс Грэхема (Ig)", value: String(result.Ig), unit: "" },
+      { label: "Оценка по Ig", value: result.igStatus, unit: "" },
+      { label: "Индекс Янга (Iy)", value: String(result.Iy), unit: "" },
+      { label: "Оценка по Iy", value: result.iyStatus, unit: "" },
+      { label: "Вывод", value: result.fireStage, unit: "" },
+    ] : [],
+  })
+
+  const isFire = result?.fireStage === "ПОЖАР"
+
+  return (
+    <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
+      <div>
+        <div className="mb-5 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm">
+          <p className="mb-2 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формулы</p>
+          <p className="font-mono text-sm text-foreground">Ig = CO / (21 − O₂)</p>
+          <p className="mt-2 font-mono text-sm text-foreground">Iy = (CO₂ + CO − 0.04) / O₂ × 100</p>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-2">Шкала индекса Грэхема (Ig)</p>
+            {[
+              { range: "< 0.1", label: "Нет пожара", color: "text-green-400" },
+              { range: "0.1 – 0.5", label: "Начальная стадия", color: "text-yellow-400" },
+              { range: "0.5 – 1.0", label: "Активное горение", color: "text-orange-400" },
+              { range: "> 1.0", label: "Интенсивное горение", color: "text-red-400" },
+            ].map(s => (
+              <div key={s.range} className="flex justify-between py-1 border-b border-foreground/5 text-sm">
+                <span className="font-mono text-foreground/50">{s.range}</span>
+                <span className={s.color}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-2">Шкала индекса Янга (Iy)</p>
+            {[
+              { range: "< 0.5", label: "Нет пожара", color: "text-green-400" },
+              { range: "0.5 – 1.5", label: "Самонагревание", color: "text-yellow-400" },
+              { range: "1.5 – 3.0", label: "Начало пожара", color: "text-orange-400" },
+              { range: "> 3.0", label: "Активный пожар", color: "text-red-400" },
+            ].map(s => (
+              <div key={s.range} className="flex justify-between py-1 border-b border-foreground/5 text-sm">
+                <span className="font-mono text-foreground/50">{s.range}</span>
+                <span className={s.color}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { label: "Окись углерода — CO, %", val: co, set: (v:string)=>{setCo(v);setCalculated(false)}, ph: "Например: 0.008" },
+            { label: "Кислород — O₂, %",       val: o2, set: (v:string)=>{setO2(v);setCalculated(false)}, ph: "Например: 18.5" },
+            { label: "Углекислый газ — CO₂, %", val: co2, set: (v:string)=>{setCo2(v);setCalculated(false)}, ph: "Например: 1.2" },
+            { label: "Азот — N₂, % (необяз.)", val: n2, set: (v:string)=>{setN2(v);setCalculated(false)}, ph: "Например: 79" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">{label}</label>
+              <input type="number" value={val} onChange={e=>set(e.target.value)} min="0" step="any" placeholder={ph}
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={handleCalculate} disabled={!isReady}
+            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 font-sans text-sm font-medium text-background transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30">
+            <Icon name="Calculator" size={16} />Рассчитать
+          </button>
+          {calculated && (
+            <button onClick={handleReset}
+              className="flex items-center gap-2 rounded-lg border border-foreground/20 px-5 py-3 font-sans text-sm text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+              <Icon name="RotateCcw" size={14} />Сбросить
+            </button>
+          )}
+        </div>
+
+        {result && (
+          <div className={`rounded-xl border p-5 backdrop-blur-sm transition-all duration-500 md:p-6 ${isFire ? "border-red-500/40 bg-red-500/5" : "border-green-500/40 bg-green-500/5"}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`rounded-full p-2 ${isFire ? "bg-red-500/15" : "bg-green-500/15"}`}>
+                <Icon name={isFire ? "Flame" : "ShieldCheck"} size={20} />
+              </div>
+              <p className={`font-sans text-lg font-medium ${isFire ? "text-red-400" : "text-green-400"}`}>{result.fireStage}</p>
+            </div>
+            <div className="space-y-3 border-t border-foreground/10 pt-4">
+              <div className="rounded-lg border border-foreground/10 p-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">Индекс Грэхема (Ig)</p>
+                <p className="font-sans text-2xl font-light text-foreground">{result.Ig}</p>
+                <p className="font-mono text-xs text-foreground/50 mt-1">{result.igStatus}</p>
+              </div>
+              <div className="rounded-lg border border-foreground/10 p-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">Индекс Янга (Iy)</p>
+                <p className="font-sans text-2xl font-light text-foreground">{result.Iy}</p>
+                <p className="font-mono text-xs text-foreground/50 mt-1">{result.iyStatus}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+              <button onClick={()=>exportToWord(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="FileText" size={14} />Word
+              </button>
+              <button onClick={()=>exportToExcel(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="Sheet" size={14} fallback="Table" />Excel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Расчёт подачи инертного газа для тушения ────────────────────────────────
+function InertGasCalculator() {
+  const [V, setV]   = useState("")   // объём изолируемого пространства, м³
+  const [o2, setO2] = useState("")   // текущий O₂, %
+  const [o2t, setO2t] = useState("") // целевой O₂ (обычно ≤2%), %
+  const [q, setQ]   = useState("")   // производительность подачи газа, м³/ч
+  const [gasType, setGasType] = useState<"N2"|"CO2">("N2")
+  const [calculated, setCalculated] = useState(false)
+  const [result, setResult] = useState<{ Vin: number; t: number; kh: number } | null>(null)
+
+  // Объём инертного газа: Vin = V × (O2нач - O2цель) / (O2воздуха - O2цель)
+  // O2воздуха = 20.9%
+  // Время: t = Vin / q (ч) → мин
+  const handleCalculate = () => {
+    const Vn   = parseFloat(V.replace(",","."))
+    const o2n  = parseFloat(o2.replace(",","."))
+    const o2tn = parseFloat(o2t.replace(",","."))
+    const qn   = parseFloat(q.replace(",","."))
+    if ([Vn,o2n,o2tn,qn].some(isNaN) || o2n<=o2tn || qn<=0) return
+    const Vin = parseFloat((Vn * (o2n - o2tn) / (20.9 - o2tn)).toFixed(1))
+    const tH  = Vin / qn
+    const t   = parseFloat((tH * 60).toFixed(0))
+    const kh  = parseFloat((Vin / Vn).toFixed(2))
+    setResult({ Vin, t, kh })
+    setCalculated(true)
+  }
+
+  const handleReset = () => { setV(""); setO2(""); setO2t(""); setQ(""); setResult(null); setCalculated(false) }
+  const isReady = V && o2 && o2t && q && parseFloat(o2)>parseFloat(o2t) && parseFloat(q)>0
+
+  const getExportData = () => ({
+    title: "Расчёт подачи инертного газа для тушения подземного пожара",
+    formula: "Vin = V × (O2нач − O2цель) / (20.9 − O2цель);  t = Vin / q",
+    inputs: [
+      { label: "Объём пространства (V)", value: V, unit: "м³" },
+      { label: "Начальный O₂", value: o2, unit: "%" },
+      { label: "Целевой O₂", value: o2t, unit: "%" },
+      { label: "Производительность подачи", value: q, unit: "м³/ч" },
+      { label: "Тип газа", value: gasType === "N2" ? "Азот (N₂)" : "Углекислый газ (CO₂)", unit: "" },
+    ],
+    results: result ? [
+      { label: "Объём инертного газа (Vin)", value: String(result.Vin), unit: "м³" },
+      { label: "Кратность заполнения (kh)", value: String(result.kh), unit: "" },
+      { label: "Время подачи (t)", value: String(result.t), unit: "мин" },
+    ] : [],
+  })
+
+  return (
+    <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
+      <div>
+        <div className="mb-5 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm">
+          <p className="mb-2 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формула</p>
+          <p className="font-mono text-lg text-foreground">Vin = V × (O₂н − O₂ц) / (20.9 − O₂ц)</p>
+          <p className="mt-2 font-mono text-sm text-foreground/60">t = Vin / q</p>
+        </div>
+        <div className="space-y-3 text-sm text-foreground/70">
+          {[
+            ["V",    "Объём изолируемого пространства, м³"],
+            ["O₂н",  "Начальное содержание кислорода, %"],
+            ["O₂ц",  "Целевое содержание O₂ (обычно ≤ 2%), %"],
+            ["20.9", "Содержание O₂ в воздухе, %"],
+            ["q",    "Производительность подачи инертного газа, м³/ч"],
+            ["t",    "Время, необходимое для инертизации, мин"],
+          ].map(([s, d]) => (
+            <div key={s} className="flex gap-3">
+              <span className="font-mono text-xs text-foreground/40 mt-0.5 shrink-0 w-10">{s}</span>
+              <span>{d}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 rounded-lg border border-foreground/10 p-4">
+          <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-2">Характеристики газов</p>
+          <div className="space-y-1 text-xs text-foreground/60 font-mono">
+            <div className="flex justify-between"><span>Азот N₂</span><span>плотность 1.25 кг/м³, безопасен</span></div>
+            <div className="flex justify-between"><span>CO₂</span><span>плотность 1.96 кг/м³, токсичен при &gt;3%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <label className="mb-2 block font-mono text-xs text-foreground/60">Тип инертного газа</label>
+          <div className="flex gap-2">
+            {([["N2","Азот (N₂)"],["CO2","Углекислый газ (CO₂)"]] as const).map(([k,l])=>(
+              <button key={k} onClick={()=>setGasType(k)}
+                className={`rounded-lg border px-4 py-2 font-sans text-sm transition-all ${gasType===k ? "border-foreground bg-foreground text-background" : "border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"}`}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { label: "Объём пространства — V, м³", val: V, set: (v:string)=>{setV(v);setCalculated(false)}, ph: "Например: 5000" },
+            { label: "Текущий O₂, %",              val: o2, set: (v:string)=>{setO2(v);setCalculated(false)}, ph: "Например: 18" },
+            { label: "Целевой O₂, %",              val: o2t, set: (v:string)=>{setO2t(v);setCalculated(false)}, ph: "Например: 2" },
+            { label: "Подача газа — q, м³/ч",      val: q, set: (v:string)=>{setQ(v);setCalculated(false)}, ph: "Например: 200" },
+          ].map(({label,val,set,ph})=>(
+            <div key={label}>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">{label}</label>
+              <input type="number" value={val} onChange={e=>set(e.target.value)} min="0" step="any" placeholder={ph}
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={handleCalculate} disabled={!isReady}
+            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 font-sans text-sm font-medium text-background transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30">
+            <Icon name="Calculator" size={16} />Рассчитать
+          </button>
+          {calculated && (
+            <button onClick={handleReset}
+              className="flex items-center gap-2 rounded-lg border border-foreground/20 px-5 py-3 font-sans text-sm text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+              <Icon name="RotateCcw" size={14} />Сбросить
+            </button>
+          )}
+        </div>
+
+        {result && (
+          <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
+            <p className="mb-4 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="rounded-lg border border-foreground/10 p-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">Объём газа</p>
+                <p className="font-sans text-xl font-light text-foreground">{result.Vin}</p>
+                <p className="font-mono text-xs text-foreground/40">м³</p>
+              </div>
+              <div className="rounded-lg border border-foreground/10 p-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">Кратность</p>
+                <p className="font-sans text-xl font-light text-foreground">{result.kh}</p>
+                <p className="font-mono text-xs text-foreground/40">Vin/V</p>
+              </div>
+              <div className="rounded-lg border border-foreground/10 p-3">
+                <p className="font-mono text-xs text-foreground/40 mb-1">Время</p>
+                <p className="font-sans text-xl font-light text-foreground">{result.t}</p>
+                <p className="font-mono text-xs text-foreground/40">мин</p>
+              </div>
+            </div>
+            <div className="flex gap-2 border-t border-foreground/10 pt-4">
+              <button onClick={()=>exportToWord(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="FileText" size={14} />Word
+              </button>
+              <button onClick={()=>exportToExcel(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="Sheet" size={14} fallback="Table" />Excel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Расчёт депрессии шахты ───────────────────────────────────────────────────
+function DepressionCalculator() {
+  const [Q, setQ]   = useState("")   // расход воздуха, м³/с
+  const [R, setR]   = useState("")   // аэродинамическое сопротивление, кг·с²/м⁸
+  const [mode, setMode] = useState<"h"|"Q"|"R">("h")
+  const [h, setH]   = useState("")   // депрессия, даПа
+  const [calculated, setCalculated] = useState(false)
+  const [result, setResult] = useState<{ value: number; label: string; unit: string; extra?: { label: string; value: string; unit: string }[] } | null>(null)
+
+  // h = R × Q²  (депрессия в кгс/м², 1 кгс/м² ≈ 9.81 Па ≈ 0.981 даПа)
+  const handleCalculate = () => {
+    if (mode === "h") {
+      const Qn = parseFloat(Q.replace(",",".")), Rn = parseFloat(R.replace(",","."))
+      if (isNaN(Qn)||isNaN(Rn)||Qn<=0||Rn<=0) return
+      const hVal = Rn * Qn * Qn
+      const hPa = hVal * 9.81
+      setResult({ value: parseFloat(hVal.toFixed(4)), label: "Депрессия шахты h", unit: "кгс/м²",
+        extra: [{ label: "в Паскалях", value: hPa.toFixed(1), unit: "Па" },
+                { label: "в даПа", value: (hPa/10).toFixed(2), unit: "даПа" }] })
+    } else if (mode === "Q") {
+      const hN = parseFloat(h.replace(",",".")), Rn = parseFloat(R.replace(",","."))
+      if (isNaN(hN)||isNaN(Rn)||hN<=0||Rn<=0) return
+      const Qval = Math.sqrt(hN / Rn)
+      setResult({ value: parseFloat(Qval.toFixed(3)), label: "Расход воздуха Q", unit: "м³/с",
+        extra: [{ label: "в м³/мин", value: (Qval*60).toFixed(1), unit: "м³/мин" }] })
+    } else {
+      const hN = parseFloat(h.replace(",",".")), Qn = parseFloat(Q.replace(",","."))
+      if (isNaN(hN)||isNaN(Qn)||hN<=0||Qn<=0) return
+      const Rval = hN / (Qn * Qn)
+      setResult({ value: parseFloat(Rval.toFixed(6)), label: "Аэродинамическое сопротивление R", unit: "кг·с²/м⁸" })
+    }
+    setCalculated(true)
+  }
+
+  const handleReset = () => { setQ(""); setR(""); setH(""); setResult(null); setCalculated(false) }
+
+  const isReady = mode === "h"
+    ? Q && R && parseFloat(Q)>0 && parseFloat(R)>0
+    : mode === "Q"
+    ? h && R && parseFloat(h)>0 && parseFloat(R)>0
+    : h && Q && parseFloat(h)>0 && parseFloat(Q)>0
+
+  const getExportData = () => ({
+    title: "Расчёт депрессии шахты",
+    formula: "h = R × Q²",
+    inputs: [
+      ...(mode !== "h" ? [{ label: "Депрессия (h)", value: h, unit: "кгс/м²" }] : []),
+      ...(mode !== "Q" ? [{ label: "Расход воздуха (Q)", value: Q, unit: "м³/с" }] : []),
+      ...(mode !== "R" ? [{ label: "Сопротивление (R)", value: R, unit: "кг·с²/м⁸" }] : []),
+    ],
+    results: result ? [
+      { label: result.label, value: String(result.value), unit: result.unit },
+      ...(result.extra || []).map(e => ({ label: e.label, value: e.value, unit: e.unit })),
+    ] : [],
+  })
+
+  const MODES = [
+    { key: "h" as const, label: "Найти h (депрессию)" },
+    { key: "Q" as const, label: "Найти Q (расход)" },
+    { key: "R" as const, label: "Найти R (сопротивление)" },
+  ]
+
+  return (
+    <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
+      <div>
+        <div className="mb-5 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm">
+          <p className="mb-2 font-mono text-xs text-foreground/50 uppercase tracking-widest">Основная формула</p>
+          <p className="font-mono text-2xl text-foreground">h = R × Q²</p>
+        </div>
+        <div className="space-y-3 text-sm text-foreground/70">
+          {[
+            ["h", "Депрессия шахты, кгс/м² (1 кгс/м² = 9.81 Па)"],
+            ["R", "Аэродинамическое сопротивление сети, кг·с²/м⁸"],
+            ["Q", "Количество воздуха, м³/с"],
+          ].map(([s,d])=>(
+            <div key={s} className="flex gap-3">
+              <span className="font-mono text-xs text-foreground/40 mt-0.5 w-5 shrink-0">{s}</span>
+              <span>{d}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 rounded-lg border border-foreground/10 p-4">
+          <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-2">Перевод единиц</p>
+          <div className="space-y-1 text-xs font-mono text-foreground/60">
+            <div>1 кгс/м² = 9.81 Па = 0.981 даПа</div>
+            <div>1 даПа = 1.02 кгс/м²</div>
+            <div>1 мм вод. ст. = 9.81 Па</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <label className="mb-2 block font-mono text-xs text-foreground/60">Что нужно найти?</label>
+          <div className="flex flex-col gap-2">
+            {MODES.map(m=>(
+              <button key={m.key} onClick={()=>{setMode(m.key);setResult(null);setCalculated(false)}}
+                className={`rounded-lg border px-4 py-2.5 text-left font-sans text-sm transition-all ${mode===m.key ? "border-foreground bg-foreground text-background" : "border-foreground/20 text-foreground/60 hover:border-foreground/40 hover:text-foreground"}`}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {(mode==="h"||mode==="R") && (
+            <div>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">Расход воздуха — Q, м³/с</label>
+              <input type="number" value={Q} onChange={e=>{setQ(e.target.value);setCalculated(false)}} min="0" step="any" placeholder="Например: 150"
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          )}
+          {(mode==="h"||mode==="Q") && (
+            <div>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">Аэродинамическое сопротивление — R, кг·с²/м⁸</label>
+              <input type="number" value={R} onChange={e=>{setR(e.target.value);setCalculated(false)}} min="0" step="any" placeholder="Например: 0.000025"
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          )}
+          {(mode==="Q"||mode==="R") && (
+            <div>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">Депрессия — h, кгс/м²</label>
+              <input type="number" value={h} onChange={e=>{setH(e.target.value);setCalculated(false)}} min="0" step="any" placeholder="Например: 50"
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={handleCalculate} disabled={!isReady}
+            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 font-sans text-sm font-medium text-background transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30">
+            <Icon name="Calculator" size={16} />Рассчитать
+          </button>
+          {calculated && (
+            <button onClick={handleReset}
+              className="flex items-center gap-2 rounded-lg border border-foreground/20 px-5 py-3 font-sans text-sm text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+              <Icon name="RotateCcw" size={14} />Сбросить
+            </button>
+          )}
+        </div>
+
+        {result && (
+          <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
+            <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
+            <div className="mb-3">
+              <p className="font-mono text-xs text-foreground/40 mb-1">{result.label}</p>
+              <p className="font-sans text-4xl font-light text-foreground md:text-5xl">
+                {result.value} <span className="text-xl text-foreground/60">{result.unit}</span>
+              </p>
+            </div>
+            {result.extra && result.extra.map(e=>(
+              <div key={e.label} className="border-t border-foreground/10 pt-2 mt-2">
+                <p className="font-mono text-xs text-foreground/40 mb-0.5">{e.label}</p>
+                <p className="font-sans text-xl font-light text-foreground">{e.value} <span className="text-sm text-foreground/60">{e.unit}</span></p>
+              </div>
+            ))}
+            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+              <button onClick={()=>exportToWord(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="FileText" size={14} />Word
+              </button>
+              <button onClick={()=>exportToExcel(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="Sheet" size={14} fallback="Table" />Excel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [activeTab, setActiveTab] = useState<TabKey>("area")
@@ -905,10 +1407,13 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
             </h3>
           </div>
 
-          {activeTab === "area" && <AreaCalculator />}
+          {activeTab === "area"       && <AreaCalculator />}
           {activeTab === "resistance" && <ResistanceCalculator />}
-          {activeTab === "leakage" && <LeakageCalculator />}
-          {activeTab === "explosion" && <ExplosibilityCalculator />}
+          {activeTab === "leakage"    && <LeakageCalculator />}
+          {activeTab === "explosion"  && <ExplosibilityCalculator />}
+          {activeTab === "fire-index" && <FireIndexCalculator />}
+          {activeTab === "inert-gas"  && <InertGasCalculator />}
+          {activeTab === "depression" && <DepressionCalculator />}
         </div>
       </div>
     </section>
