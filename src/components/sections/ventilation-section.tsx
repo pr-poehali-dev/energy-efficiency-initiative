@@ -493,10 +493,16 @@ function LeakageCalculator() {
         {result !== null && (
           <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
             <p className="mb-3 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
-            <div>
+            <div className="mb-3">
               <p className="font-mono text-xs text-foreground/40 mb-1">Нормативные утечки Q_ут.зд</p>
               <p className="font-sans text-4xl font-light text-foreground md:text-5xl">
                 {result.qzd} <span className="text-xl text-foreground/60">м³/мин</span>
+              </p>
+            </div>
+            <div className="border-t border-foreground/10 pt-3">
+              <p className="font-mono text-xs text-foreground/40 mb-1">В единицах м³/с</p>
+              <p className="font-sans text-2xl font-light text-foreground">
+                {parseFloat((result.qzd / 60).toFixed(4))} <span className="text-base text-foreground/60">м³/с</span>
               </p>
             </div>
             <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
