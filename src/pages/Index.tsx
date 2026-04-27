@@ -6,6 +6,7 @@ import { VentilationSection } from "@/components/sections/ventilation-section"
 import { FirefightingSection } from "@/components/sections/firefighting-section"
 import { ReferenceSection } from "@/components/sections/reference-section"
 import { MagneticButton } from "@/components/magnetic-button"
+import GlobalSearch from "@/components/GlobalSearch"
 import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "@/components/ui/icon"
@@ -31,6 +32,7 @@ export default function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [calcDropdownOpen, setCalcDropdownOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
   const scrollThrottleRef = useRef<number>()
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
@@ -230,7 +232,15 @@ export default function Index() {
         </div>
 
         <div className="flex items-center gap-3">
-          <MagneticButton variant="secondary" onClick={() => scrollToSection(1)} className="px-3 py-2 text-xs md:px-6 md:py-2.5 md:text-sm">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-foreground/20 bg-foreground/5 px-3 py-2 text-foreground/60 transition-colors hover:border-foreground/40 hover:text-foreground"
+            aria-label="Поиск"
+          >
+            <Icon name="Search" size={15} />
+            <span className="hidden md:inline font-sans text-sm">Поиск</span>
+          </button>
+          <MagneticButton variant="secondary" onClick={() => scrollToSection(1)} className="hidden md:flex px-6 py-2.5 text-sm">
             Попробовать
           </MagneticButton>
           <button
@@ -281,6 +291,14 @@ export default function Index() {
               >
                 <span>Треугольник взрываемости</span>
                 <Icon name="ExternalLink" size={14} className="text-foreground/40" />
+              </button>
+              <div className="my-2 h-px bg-foreground/10" />
+              <button
+                onClick={() => { setMobileMenuOpen(false); setSearchOpen(true) }}
+                className="text-left px-3 py-2.5 rounded-lg font-sans text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center gap-2"
+              >
+                <Icon name="Search" size={14} />
+                <span>Поиск</span>
               </button>
             </div>
           </div>
@@ -380,6 +398,7 @@ export default function Index() {
         <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[5] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} scrollToSection={scrollToSection} />
     </main>
   )
 }
