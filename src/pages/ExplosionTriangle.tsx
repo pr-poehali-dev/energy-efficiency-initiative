@@ -789,7 +789,8 @@ export default function ExplosionTriangle() {
       </div>
 
       {/* Раздел — Взрываемость смеси горючих газов (метод Боевого устава ВГСЧ) */}
-      <div className="mt-16 border-t border-foreground/10 pt-16">
+      <div className="relative z-10 mt-0 border-t border-foreground/10 px-6 pb-20 pt-16 md:px-12">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-10">
           <div className="mb-4 inline-block rounded-full border border-foreground/20 bg-foreground/10 px-4 py-1.5">
             <p className="font-mono text-xs text-foreground/70">Боевой устав ВГСЧ 1996, Прил. 11</p>
@@ -803,6 +804,7 @@ export default function ExplosionTriangle() {
           </p>
         </div>
         <ExplosibilityCalculator />
+      </div>
       </div>
     </main>
   )
