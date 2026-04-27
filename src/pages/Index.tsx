@@ -35,6 +35,7 @@ export default function Index() {
   const [searchOpen, setSearchOpen] = useState(false)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
   const scrollThrottleRef = useRef<number>()
+  const dropdownCloseTimer = useRef<ReturnType<typeof setTimeout>>()
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
@@ -175,7 +176,11 @@ export default function Index() {
           </button>
 
           {/* Расчёты — дропдаун */}
-          <div className="relative" onMouseEnter={() => setCalcDropdownOpen(true)} onMouseLeave={() => setCalcDropdownOpen(false)}>
+          <div
+            className="relative"
+            onMouseEnter={() => { clearTimeout(dropdownCloseTimer.current); setCalcDropdownOpen(true) }}
+            onMouseLeave={() => { dropdownCloseTimer.current = setTimeout(() => setCalcDropdownOpen(false), 150) }}
+          >
             <button
               className={`group relative font-sans text-sm font-medium transition-colors flex items-center gap-1 ${
                 [1, 2, 3].includes(currentSection) ? "text-foreground" : "text-foreground/80 hover:text-foreground"
@@ -186,7 +191,9 @@ export default function Index() {
               <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${[1, 2, 3].includes(currentSection) ? "w-full" : "w-0 group-hover:w-full"}`} />
             </button>
             {calcDropdownOpen && (
-              <div className="absolute left-0 top-full pt-3 z-50">
+              <div className="absolute left-0 top-full z-50" style={{paddingTop: '8px'}}>
+                <div className="absolute inset-x-0 top-0 h-2" />
+
                 <div className="rounded-xl border border-foreground/10 bg-background/95 backdrop-blur-md shadow-lg overflow-hidden min-w-[200px]">
                   {[
                     { label: "Вентиляция", index: 1 },
