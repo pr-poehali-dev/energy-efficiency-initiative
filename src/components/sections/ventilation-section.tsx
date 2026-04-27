@@ -1045,7 +1045,7 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
   return (
     <section
       ref={(el) => { ref.current = el; sectionRef?.(el) }}
-      className="flex min-h-screen w-full items-start px-4 py-24 md:px-12 lg:px-16"
+      className="flex min-h-screen w-full items-start px-6 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div

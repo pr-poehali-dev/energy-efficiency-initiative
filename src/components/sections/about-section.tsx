@@ -23,7 +23,7 @@ export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?
   return (
     <section
       ref={(el) => { ref.current = el; sectionRef?.(el) }}
-      className="w-full px-4 py-24 md:px-12 lg:px-16"
+      className="w-full px-6 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl space-y-24 md:space-y-32">
 

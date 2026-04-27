@@ -547,7 +547,7 @@ export function FirefightingSection({ sectionRef }: { sectionRef?: (el: HTMLElem
   return (
     <section
       ref={(el) => { ref.current = el; sectionRef?.(el) }}
-      className="flex min-h-screen w-full flex-col px-4 py-24 md:px-12 lg:px-16"
+      className="flex min-h-screen w-full flex-col px-6 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div

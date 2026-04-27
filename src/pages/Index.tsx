@@ -15,7 +15,7 @@ const SECTION_IDS = ["hero", "ventilation", "firefighting", "explosion", "refere
 
 function SectionDivider({ index, label }: { index: number; label: string }) {
   return (
-    <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-12 lg:px-16">
+    <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
       <div className="flex items-center gap-4">
         <span className="font-mono text-[10px] text-foreground/30 tracking-widest uppercase shrink-0">
           {String(index).padStart(2, "0")} / {label}
@@ -373,7 +373,7 @@ export default function Index() {
         <section
           id="explosion"
           ref={(el) => { sectionRefs.current[3] = el }}
-          className="relative z-10 mx-auto max-w-7xl px-4 py-20 md:px-12 lg:px-16"
+          className="relative z-10 mx-auto max-w-7xl px-6 py-20 md:px-12 lg:px-16"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-xl">
