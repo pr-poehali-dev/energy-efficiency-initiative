@@ -3,13 +3,14 @@ import { useState } from "react"
 import Icon from "@/components/ui/icon"
 import { exportToWord, exportToExcel } from "@/lib/export-utils"
 
-type TabKey = "area" | "resistance" | "leakage" | "depression"
+type TabKey = "area" | "resistance" | "leakage" | "depression" | "fan-reserve"
 
 const TABS: { key: TabKey; label: string; full: string; short: string }[] = [
   { key: "area",        label: "Площадь сечения",           full: "Площадь сечения канала вентиляции",                        short: "Сечение" },
   { key: "resistance",  label: "Аэродин. сопротивление",    full: "Аэродинамическое сопротивление выработки",                 short: "Сопротивл." },
   { key: "leakage",     label: "Утечки надшахтного здания", full: "Нормативные утечки воздуха через надшахтное здание",       short: "Утечки" },
   { key: "depression",  label: "Депрессия шахты",           full: "Расчёт депрессии и количества воздуха в шахте",            short: "Депрессия" },
+  { key: "fan-reserve", label: "Резерв подачи ГВУ",         full: "Резерв подачи вентиляторов главного проветривания (ΔQ)",   short: "Резерв ГВУ" },
 ]
 
 function AreaCalculator() {
@@ -701,6 +702,130 @@ function DepressionCalculator() {
   )
 }
 
+// ─── Резерв подачи вентиляторов главного проветривания ───────────────────────
+function FanReserveCalculator() {
+  const [Qmax, setQmax] = useState("")
+  const [Qv, setQv]     = useState("")
+  const [calculated, setCalculated]   = useState(false)
+  const [result, setResult] = useState<{ dQ: number; status: string; statusColor: string } | null>(null)
+
+  const handleCalculate = () => {
+    const Qmaxn = parseFloat(Qmax.replace(",", "."))
+    const Qvn   = parseFloat(Qv.replace(",", "."))
+    if (isNaN(Qmaxn) || isNaN(Qvn) || Qvn <= 0 || Qmaxn <= 0) return
+    const dQ = parseFloat(((Qmaxn / Qvn - 1) * 100).toFixed(1))
+
+    let status = "", statusColor = ""
+    if (dQ < 20)       { status = "Резерв недостаточен (< 20%)";   statusColor = "text-red-400" }
+    else if (dQ < 30)  { status = "Резерв в норме (20–30%)";        statusColor = "text-yellow-400" }
+    else               { status = "Резерв достаточен (≥ 30%)";      statusColor = "text-green-400" }
+
+    setResult({ dQ, status, statusColor })
+    setCalculated(true)
+  }
+
+  const handleReset = () => { setQmax(""); setQv(""); setResult(null); setCalculated(false) }
+  const isReady = Qmax && Qv && parseFloat(Qv) > 0 && parseFloat(Qmax) > 0
+
+  const getExportData = () => ({
+    title: "Резерв подачи вентиляторов главного проветривания (ΔQ)",
+    formula: "ΔQ = (Qmax / Qв − 1) × 100%",
+    inputs: [
+      { label: "Максимальная подача вентилятора (Qmax)", value: Qmax, unit: "м³/с" },
+      { label: "Фактический расход воздуха в шахте (Qв)", value: Qv, unit: "м³/с" },
+    ],
+    results: result ? [
+      { label: "Резерв подачи (ΔQ)", value: String(result.dQ), unit: "%" },
+      { label: "Оценка", value: result.status, unit: "" },
+    ] : [],
+  })
+
+  return (
+    <div className="grid gap-10 md:grid-cols-2 md:gap-16 lg:gap-24">
+      <div>
+        <div className="mb-5 rounded-xl border border-foreground/10 bg-foreground/5 p-5 backdrop-blur-sm">
+          <p className="mb-2 font-mono text-xs text-foreground/50 uppercase tracking-widest">Формула</p>
+          <p className="font-mono text-xl text-foreground">ΔQ = (Q<sub>max</sub> / Q<sub>в</sub> − 1) · 100%</p>
+        </div>
+        <div className="space-y-3 text-sm text-foreground/70">
+          {[
+            ["Qmax", "Максимальная подача вентилятора при работе на шахтную сеть, м³/с"],
+            ["Qв",   "Фактический расход воздуха в шахте (по замеру или расчёту), м³/с"],
+            ["ΔQ",   "Резерв подачи, %"],
+          ].map(([s, d]) => (
+            <div key={s} className="flex gap-3">
+              <span className="font-mono text-xs text-foreground/40 mt-0.5 shrink-0 w-10">{s}</span>
+              <span>{d}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 rounded-lg border border-foreground/10 p-4">
+          <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-3">Нормативная оценка</p>
+          {[
+            { range: "< 20%",  label: "Резерв недостаточен", color: "text-red-400" },
+            { range: "20–30%", label: "Норма",               color: "text-yellow-400" },
+            { range: "≥ 30%",  label: "Достаточный резерв",  color: "text-green-400" },
+          ].map(s => (
+            <div key={s.range} className="flex justify-between py-1 border-b border-foreground/5 text-sm">
+              <span className="font-mono text-foreground/50">{s.range}</span>
+              <span className={s.color}>{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { label: "Макс. подача вентилятора — Qmax, м³/с", val: Qmax, set: (v: string) => { setQmax(v); setCalculated(false) }, ph: "Например: 120" },
+            { label: "Расход воздуха в шахте — Qв, м³/с",    val: Qv,   set: (v: string) => { setQv(v);   setCalculated(false) }, ph: "Например: 90" },
+          ].map(({ label, val, set, ph }) => (
+            <div key={label}>
+              <label className="mb-2 block font-mono text-xs text-foreground/60">{label}</label>
+              <input type="number" value={val} onChange={e => set(e.target.value)} min="0" step="any" placeholder={ph}
+                className="w-full border-b border-foreground/30 bg-transparent py-2 text-lg text-foreground placeholder:text-foreground/30 focus:border-foreground/60 focus:outline-none" />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={handleCalculate} disabled={!isReady}
+            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-3 font-sans text-sm font-medium text-background transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30">
+            <Icon name="Calculator" size={16} />Рассчитать
+          </button>
+          {calculated && (
+            <button onClick={handleReset}
+              className="flex items-center gap-2 rounded-lg border border-foreground/20 px-5 py-3 font-sans text-sm text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+              <Icon name="RotateCcw" size={14} />Сбросить
+            </button>
+          )}
+        </div>
+
+        {result && (
+          <div className="rounded-xl border border-foreground/20 bg-foreground/5 p-5 backdrop-blur-sm transition-all duration-500 md:p-6">
+            <p className="mb-4 font-mono text-xs text-foreground/50 uppercase tracking-widest">Результат</p>
+            <div className="mb-4">
+              <p className="font-mono text-xs text-foreground/40 mb-1">Резерв подачи (ΔQ)</p>
+              <p className="font-sans text-5xl font-light text-foreground">{result.dQ}<span className="text-2xl text-foreground/50 ml-1">%</span></p>
+              <p className={`mt-2 font-mono text-sm ${result.statusColor}`}>{result.status}</p>
+            </div>
+            <div className="flex gap-2 border-t border-foreground/10 pt-4">
+              <button onClick={() => exportToWord(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="FileText" size={14} />Word
+              </button>
+              <button onClick={() => exportToExcel(getExportData())}
+                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground">
+                <Icon name="Sheet" size={14} fallback="Table" />Excel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLElement | null) => void } = {}) {
   const { ref, isVisible } = useReveal(0.3)
   const [activeTab, setActiveTab] = useState<TabKey>("area")
@@ -757,10 +882,11 @@ export function VentilationSection({ sectionRef }: { sectionRef?: (el: HTMLEleme
             </h3>
           </div>
 
-          {activeTab === "area"       && <AreaCalculator />}
-          {activeTab === "resistance" && <ResistanceCalculator />}
-          {activeTab === "leakage"    && <LeakageCalculator />}
-          {activeTab === "depression" && <DepressionCalculator />}
+          {activeTab === "area"        && <AreaCalculator />}
+          {activeTab === "resistance"  && <ResistanceCalculator />}
+          {activeTab === "leakage"     && <LeakageCalculator />}
+          {activeTab === "depression"  && <DepressionCalculator />}
+          {activeTab === "fan-reserve" && <FanReserveCalculator />}
         </div>
       </div>
     </section>
