@@ -37,5 +37,8 @@ export function usePwaInstall() {
     }
   }
 
-  return { canInstall: !!prompt && !isInstalled, isInstalled, install }
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const isInStandalone = window.matchMedia("(display-mode: standalone)").matches
+
+  return { canInstall: !!prompt && !isInstalled, isInstalled, install, isIos, isInStandalone }
 }

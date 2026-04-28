@@ -30,7 +30,10 @@ function SectionDivider({ index, label }: { index: number; label: string }) {
 
 export default function Index() {
   const navigate = useNavigate()
-  const { canInstall, install } = usePwaInstall()
+  const { canInstall, install, isIos, isInStandalone } = usePwaInstall()
+  const [iosHintDismissed, setIosHintDismissed] = useState(() => localStorage.getItem("ios_hint_dismissed") === "1")
+  const showIosHint = isIos && !isInStandalone && !iosHintDismissed
+  const dismissIosHint = () => { localStorage.setItem("ios_hint_dismissed", "1"); setIosHintDismissed(true) }
   const [currentSection, setCurrentSection] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -350,6 +353,28 @@ export default function Index() {
           </div>
         )}
       </nav>
+
+      {/* iOS подсказка */}
+      {showIosHint && (
+        <div className="fixed bottom-0 left-0 right-0 z-[70] p-4 md:hidden">
+          <div className="relative rounded-2xl border border-foreground/20 bg-background/95 backdrop-blur-md p-4 shadow-2xl">
+            <button onClick={dismissIosHint} className="absolute right-3 top-3 text-foreground/40 hover:text-foreground transition-colors">
+              <Icon name="X" size={16} />
+            </button>
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 rounded-xl bg-foreground/10 p-2">
+                <Icon name="Share" size={20} className="text-foreground/70" />
+              </div>
+              <div>
+                <p className="font-sans text-sm font-medium text-foreground">Установить как приложение</p>
+                <p className="mt-1 font-mono text-xs text-foreground/50 leading-relaxed">
+                  Нажми <span className="inline-flex items-center gap-0.5 rounded bg-foreground/10 px-1.5 py-0.5 font-mono text-xs text-foreground/70"><Icon name="Share" size={10} /> Поделиться</span>, затем <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-foreground/70">На экран «Домой»</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={`relative z-10 transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
         {/* Hero Section */}
