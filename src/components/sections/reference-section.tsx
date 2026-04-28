@@ -15,11 +15,15 @@ const SIMPLE_REFS = [
     category: "ПДК вредных газов",
     isPdk: true,
     items: [
-      { name: "Оксид углерода (CO)",                    value: "0,00170", value2: "20" },
-      { name: "Оксиды азота (в перерасчёте на NO₂)",    value: "0,00025", value2: "5" },
-      { name: "Диоксид азота (NO₂)",                    value: "0,00010", value2: "2" },
-      { name: "Сернистый ангидрид (SO₂)",               value: "0,00038", value2: "10" },
-      { name: "Сероводород (H₂S)",                      value: "0,00070", value2: "10" },
+      { name: "Окись углерода (оксид углерода)",                                       formula: "CO",        value: "0,0017",   value2: "20" },
+      { name: "Окислы азота (оксиды азота) в пересчёте на NO₂",                       formula: "NO₂",       value: "0,00026",  value2: "5" },
+      { name: "Сернистый газ (диоксид серы, сернистый ангидрид)",                      formula: "SO₂",       value: "0,00038",  value2: "10" },
+      { name: "Сероводород",                                                            formula: "H₂S",       value: "0,00071",  value2: "10" },
+      { name: "Акролеин",                                                               formula: "C₃H₄O",     value: "0,000009", value2: "0,2" },
+      { name: "Формальдегид",                                                           formula: "CH₂O",      value: "0,00004",  value2: "0,5" },
+      { name: "Ртуть металлическая",                                                    formula: "Hg",        value: "—",        value2: "0,01" },
+      { name: "Аммиак",                                                                 formula: "NH₃",       value: "0,0025",   value2: "20" },
+      { name: "Углеводороды алифатические (C1–C10) предельные в пересчёте на углерод", formula: "CₙH₂ₙ₊₂",  value: "—",        value2: "300" },
     ],
   },
   {
@@ -198,18 +202,20 @@ export function ReferenceSection({ sectionRef }: { sectionRef?: (el: HTMLElement
             <div className="rounded-xl border border-foreground/10 bg-foreground/5 backdrop-blur-sm overflow-hidden flex-1 overflow-auto">
               {SIMPLE_REFS[activeSimple].isPdk ? (
                 <>
-                  <div className="grid grid-cols-[1fr_auto_auto] border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8 gap-4">
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Вредный газ</p>
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">% (по объёму)</p>
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8 gap-4">
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Наименование</p>
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-center w-20">Формула</p>
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right w-24">% по объёму</p>
                     <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right w-16">мг/м³</p>
                   </div>
                   {SIMPLE_REFS[activeSimple].items.map((item, i) => (
                     <div
                       key={i}
-                      className="grid grid-cols-[1fr_auto_auto] border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8 gap-4 items-center"
+                      className="grid grid-cols-[1fr_auto_auto_auto] border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8 gap-4 items-center"
                     >
                       <p className="text-sm text-foreground/80 md:text-base">{item.name}</p>
-                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right">{item.value}</p>
+                      <p className="font-mono text-sm text-foreground/60 font-medium md:text-base text-center w-20">{"formula" in item ? item.formula : ""}</p>
+                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right w-24">{item.value}</p>
                       <p className="font-mono text-sm text-foreground font-medium md:text-base text-right w-16">{item.value2}</p>
                     </div>
                   ))}
