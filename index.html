@@ -6,6 +6,16 @@
     <title>СДС</title>
     <meta name="description" content="Расчеты СДС и ГИО">
     <meta name="author" content="Flowrise"/>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json"/>
+    <meta name="theme-color" content="#121212"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="СДС"/>
+    <link rel="apple-touch-icon" href="https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/files/574613b2-2252-4a0b-8764-1d3c12b9119a.jpg"/>
+
     <link rel="icon" type="image/png" href="https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/files/favicon-1776923195932.png">
     <meta property="og:title" content="СДС">
     <meta property="og:description" content="Расчеты СДС и ГИО">
@@ -23,5 +33,12 @@
 <body>
 <div id="root"></div>
 <script type="module" src="/src/main.tsx"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>
