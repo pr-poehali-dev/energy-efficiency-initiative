@@ -9,32 +9,31 @@ def get_conn():
 
 CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Password',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
 }
 
 
-def check_auth(event: dict) -> bool:
-    """Проверяет пароль администратора из заголовка"""
-    password = (event.get('headers') or {}).get('x-admin-password', '')
-    return password == os.environ.get('ADMIN_PASSWORD', '')
-
-
 def handler(event: dict, context) -> dict:
-    """Управление лицензионными ключами: список, добавление, удаление"""
+    """Управление лицензионными ключами: список, добавление, удаление. Пароль передаётся в теле."""
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS, 'body': ''}
 
-    if not check_auth(event):
+    if event.get('httpMethod') != 'POST':
+        return {'statusCode': 405, 'headers': CORS, 'body': json.dumps({'error': 'Method not allowed'})}
+
+    body = json.loads(event.get('body') or '{}')
+    password = (body.get('password') or '').strip()
+    action = (body.get('action') or '').strip()
+
+    if password != os.environ.get('ADMIN_PASSWORD', ''):
         return {
             'statusCode': 401,
             'headers': {**CORS, 'Content-Type': 'application/json'},
             'body': json.dumps({'error': 'Неверный пароль'})
         }
 
-    method = event.get('httpMethod', 'GET')
-
-    if method == 'GET':
+    if action == 'list':
         conn = get_conn()
         cur = conn.cursor()
         cur.execute(
@@ -60,8 +59,7 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'keys': keys})
         }
 
-    if method == 'POST':
-        body = json.loads(event.get('body') or '{}')
+    if action == 'add':
         key = (body.get('key') or '').strip()
         client_name = (body.get('client_name') or '').strip()
         expires_at = body.get('expires_at') or None
@@ -89,8 +87,7 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'success': True, 'id': new_id})
         }
 
-    if method == 'DELETE':
-        body = json.loads(event.get('body') or '{}')
+    if action == 'delete':
         key_id = body.get('id')
         if not key_id:
             return {
@@ -111,7 +108,7 @@ def handler(event: dict, context) -> dict:
         }
 
     return {
-        'statusCode': 405,
+        'statusCode': 400,
         'headers': {**CORS, 'Content-Type': 'application/json'},
-        'body': json.dumps({'error': 'Method not allowed'})
+        'body': json.dumps({'error': 'Неизвестное действие'})
     }

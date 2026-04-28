@@ -19,6 +19,16 @@ function generateKey(): string {
   return `${seg()}-${seg()}-${seg()}`
 }
 
+async function api(pwd: string, action: string, extra: object = {}) {
+  const res = await fetch(ADMIN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: pwd, action, ...extra }),
+  })
+  const data = await res.json()
+  return typeof data === "string" ? JSON.parse(data) : data
+}
+
 export default function Admin() {
   const [password, setPassword] = useState("")
   const [authed, setAuthed] = useState(false)
@@ -38,13 +48,9 @@ export default function Admin() {
 
   const fetchKeys = useCallback(async (pwd: string) => {
     setLoading(true)
-    const res = await fetch(ADMIN_URL, {
-      headers: { "x-admin-password": pwd }
-    })
-    const data = await res.json()
-    const parsed = typeof data === "string" ? JSON.parse(data) : data
+    const data = await api(pwd, "list")
     setLoading(false)
-    return parsed
+    return data
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -81,16 +87,14 @@ export default function Admin() {
     if (!newKey.trim() || !newName.trim()) return
     setAdding(true)
     setAddError("")
-    const res = await fetch(ADMIN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-password": savedPwd },
-      body: JSON.stringify({ key: newKey.trim(), client_name: newName.trim(), expires_at: newExpires || null })
+    const data = await api(savedPwd, "add", {
+      key: newKey.trim(),
+      client_name: newName.trim(),
+      expires_at: newExpires || null,
     })
-    const data = await res.json()
-    const parsed = typeof data === "string" ? JSON.parse(data) : data
     setAdding(false)
-    if (parsed.error) {
-      setAddError(parsed.error)
+    if (data.error) {
+      setAddError(data.error)
     } else {
       setNewKey(generateKey())
       setNewName("")
@@ -102,11 +106,7 @@ export default function Admin() {
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`Удалить ключ клиента «${name}»?`)) return
-    await fetch(ADMIN_URL, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", "x-admin-password": savedPwd },
-      body: JSON.stringify({ id })
-    })
+    await api(savedPwd, "delete", { id })
     const fresh = await fetchKeys(savedPwd)
     setKeys(fresh.keys || [])
   }
@@ -166,7 +166,6 @@ export default function Admin() {
     <div className="min-h-screen bg-background px-4 py-10 md:px-10">
       <div className="mx-auto max-w-4xl">
 
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="font-sans text-3xl font-light text-foreground">Лицензионные ключи</h1>
@@ -178,7 +177,6 @@ export default function Admin() {
           </button>
         </div>
 
-        {/* Add form */}
         <div className="mb-8 rounded-xl border border-foreground/10 bg-foreground/5 p-6">
           <p className="mb-4 font-mono text-xs text-foreground/50 uppercase tracking-widest">Добавить клиента</p>
           <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto]">
@@ -230,7 +228,6 @@ export default function Admin() {
           {addError && <p className="mt-3 font-mono text-xs text-red-400">{addError}</p>}
         </div>
 
-        {/* Keys table */}
         <div className="rounded-xl border border-foreground/10 bg-foreground/5 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-foreground/40">
@@ -240,14 +237,14 @@ export default function Admin() {
             <div className="py-16 text-center font-mono text-sm text-foreground/30">Ключей пока нет</div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_160px_100px_80px] border-b border-foreground/10 px-5 py-3 bg-background/40">
+              <div className="grid grid-cols-[1fr_120px_100px_60px] border-b border-foreground/10 px-5 py-3 bg-background/40">
                 <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Клиент / Ключ</p>
                 <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Создан</p>
                 <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Истекает</p>
-                <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">Действие</p>
+                <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">Удалить</p>
               </div>
               {keys.map(k => (
-                <div key={k.id} className="grid grid-cols-[1fr_160px_100px_80px] border-b border-foreground/5 last:border-0 px-5 py-4 hover:bg-foreground/5 transition-colors items-center">
+                <div key={k.id} className="grid grid-cols-[1fr_120px_100px_60px] border-b border-foreground/5 last:border-0 px-5 py-4 hover:bg-foreground/5 transition-colors items-center">
                   <div>
                     <p className="text-sm text-foreground font-medium">{k.client_name}</p>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -275,6 +272,7 @@ export default function Admin() {
             </>
           )}
         </div>
+
       </div>
     </div>
   )
