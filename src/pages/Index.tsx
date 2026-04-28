@@ -248,7 +248,9 @@ export default function Index() {
         </div>
 
         <div className="flex items-center gap-3">
-          <LicenseBanner />
+          <div className="hidden md:block">
+            <LicenseBanner />
+          </div>
           <button
             onClick={() => setSearchOpen(true)}
             className="flex items-center gap-2 rounded-lg border border-foreground/20 bg-foreground/5 px-3 py-2 text-foreground/60 transition-colors hover:border-foreground/40 hover:text-foreground"
@@ -267,6 +269,13 @@ export default function Index() {
           >
             <Icon name={mobileMenuOpen ? "X" : "Menu"} size={18} />
           </button>
+        </div>
+
+        {/* Мобильная полоса лицензии */}
+        <div className="absolute left-0 right-0 top-full border-b border-foreground/10 bg-background/80 backdrop-blur-md md:hidden">
+          <div className="px-4 py-2">
+            <LicenseBanner fullWidth />
+          </div>
         </div>
 
         {/* Мобильное меню */}

@@ -2,15 +2,17 @@ import { useState } from "react"
 import { useLicense } from "@/context/license-context"
 import Icon from "@/components/ui/icon"
 
-export function LicenseBanner() {
+export function LicenseBanner({ fullWidth }: { fullWidth?: boolean } = {}) {
   const { isUnlocked, clientName, deactivate } = useLicense()
   const [showModal, setShowModal] = useState(false)
 
   if (isUnlocked) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400">
-        <Icon name="ShieldCheck" size={14} />
-        <span>Полная версия — {clientName}</span>
+      <div className={`flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 ${fullWidth ? "w-full justify-between" : ""}`}>
+        <div className="flex items-center gap-2">
+          <Icon name="ShieldCheck" size={14} />
+          <span>Полная версия — {clientName}</span>
+        </div>
         <button onClick={deactivate} className="ml-1 text-green-400/50 hover:text-green-400 transition-colors">
           <Icon name="LogOut" size={12} />
         </button>
@@ -22,7 +24,7 @@ export function LicenseBanner() {
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-2 rounded-lg border border-foreground/20 px-3 py-1.5 text-xs text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-all"
+        className={`flex items-center gap-2 rounded-lg border border-foreground/20 px-3 py-1.5 text-xs text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-all ${fullWidth ? "w-full justify-center" : ""}`}
       >
         <Icon name="Lock" size={14} />
         Демо-версия — ввести ключ
