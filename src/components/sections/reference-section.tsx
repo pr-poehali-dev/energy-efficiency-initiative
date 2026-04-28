@@ -9,8 +9,17 @@ const SIMPLE_REFS = [
       { name: "Скорость воздуха (принудит. проветривание)", value: "3 м/с" },
       { name: "Скорость воздуха (естественное проветривание)", value: "0.5–1 м/с" },
       { name: "Минимальный воздухообмен на человека", value: "6 м³/мин" },
-      { name: "ПДК СО", value: "0.0017 мг/л" },
-      { name: "ПДК NO₂", value: "0.005 мг/л" },
+    ],
+  },
+  {
+    category: "ПДК вредных газов",
+    isPdk: true,
+    items: [
+      { name: "Оксид углерода (CO)",                    value: "0,00170", value2: "20" },
+      { name: "Оксиды азота (в перерасчёте на NO₂)",    value: "0,00025", value2: "5" },
+      { name: "Диоксид азота (NO₂)",                    value: "0,00010", value2: "2" },
+      { name: "Сернистый ангидрид (SO₂)",               value: "0,00038", value2: "10" },
+      { name: "Сероводород (H₂S)",                      value: "0,00070", value2: "10" },
     ],
   },
   {
@@ -187,19 +196,41 @@ export function ReferenceSection({ sectionRef }: { sectionRef?: (el: HTMLElement
             </div>
 
             <div className="rounded-xl border border-foreground/10 bg-foreground/5 backdrop-blur-sm overflow-hidden flex-1 overflow-auto">
-              <div className="grid grid-cols-2 border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8">
-                <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Параметр</p>
-                <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Значение</p>
-              </div>
-              {SIMPLE_REFS[activeSimple].items.map((item, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-2 border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8"
-                >
-                  <p className="text-sm text-foreground/80 pr-4 md:text-base">{item.name}</p>
-                  <p className="font-mono text-sm text-foreground font-medium md:text-base">{item.value}</p>
-                </div>
-              ))}
+              {SIMPLE_REFS[activeSimple].isPdk ? (
+                <>
+                  <div className="grid grid-cols-[1fr_auto_auto] border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8 gap-4">
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Вредный газ</p>
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">% (по объёму)</p>
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right w-16">мг/м³</p>
+                  </div>
+                  {SIMPLE_REFS[activeSimple].items.map((item, i) => (
+                    <div
+                      key={i}
+                      className="grid grid-cols-[1fr_auto_auto] border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8 gap-4 items-center"
+                    >
+                      <p className="text-sm text-foreground/80 md:text-base">{item.name}</p>
+                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right">{item.value}</p>
+                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right w-16">{item.value2}</p>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8">
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Параметр</p>
+                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Значение</p>
+                  </div>
+                  {SIMPLE_REFS[activeSimple].items.map((item, i) => (
+                    <div
+                      key={i}
+                      className="grid grid-cols-2 border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8"
+                    >
+                      <p className="text-sm text-foreground/80 pr-4 md:text-base">{item.name}</p>
+                      <p className="font-mono text-sm text-foreground font-medium md:text-base">{item.value}</p>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
 
             <p className="mt-3 font-mono text-xs text-foreground/40 flex items-center gap-2 shrink-0">
