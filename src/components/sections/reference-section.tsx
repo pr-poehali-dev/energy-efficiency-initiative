@@ -201,25 +201,27 @@ export function ReferenceSection({ sectionRef }: { sectionRef?: (el: HTMLElement
 
             <div className="rounded-xl border border-foreground/10 bg-foreground/5 backdrop-blur-sm overflow-hidden flex-1 overflow-auto">
               {SIMPLE_REFS[activeSimple].isPdk ? (
-                <>
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8 gap-4">
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Наименование</p>
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-center w-20">Формула</p>
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right w-24">% по объёму</p>
-                    <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right w-16">мг/м³</p>
-                  </div>
-                  {SIMPLE_REFS[activeSimple].items.map((item, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-[1fr_auto_auto_auto] border-b border-foreground/5 px-5 py-4 last:border-0 hover:bg-foreground/5 transition-colors md:px-8 gap-4 items-center"
-                    >
-                      <p className="text-sm text-foreground/80 md:text-base">{item.name}</p>
-                      <p className="font-mono text-sm text-foreground/60 font-medium md:text-base text-center w-20">{"formula" in item ? item.formula : ""}</p>
-                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right w-24">{item.value}</p>
-                      <p className="font-mono text-sm text-foreground font-medium md:text-base text-right w-16">{item.value2}</p>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[480px]">
+                    <div className="grid grid-cols-[1fr_80px_90px_70px] border-b border-foreground/10 px-4 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8 gap-2">
+                      <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Наименование</p>
+                      <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-center">Формула</p>
+                      <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">% по объёму</p>
+                      <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest text-right">мг/м³</p>
                     </div>
-                  ))}
-                </>
+                    {SIMPLE_REFS[activeSimple].items.map((item, i) => (
+                      <div
+                        key={i}
+                        className="grid grid-cols-[1fr_80px_90px_70px] border-b border-foreground/5 px-4 py-3 last:border-0 hover:bg-foreground/5 transition-colors md:px-8 gap-2 items-center"
+                      >
+                        <p className="text-xs text-foreground/80 md:text-sm">{item.name}</p>
+                        <p className="font-mono text-xs text-foreground/60 font-medium md:text-sm text-center">{"formula" in item ? item.formula : ""}</p>
+                        <p className="font-mono text-xs text-foreground font-medium md:text-sm text-right">{item.value}</p>
+                        <p className="font-mono text-xs text-foreground font-medium md:text-sm text-right">{item.value2}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="grid grid-cols-2 border-b border-foreground/10 px-5 py-3 sticky top-0 bg-background/80 backdrop-blur-sm md:px-8">
