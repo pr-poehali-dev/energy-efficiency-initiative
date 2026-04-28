@@ -11,6 +11,7 @@ import { LicenseBanner } from "@/components/license-gate"
 import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "@/components/ui/icon"
+import { usePwaInstall } from "@/hooks/use-pwa-install"
 
 const SECTION_IDS = ["hero", "ventilation", "firefighting", "explosion", "reference", "about"]
 
@@ -29,6 +30,7 @@ function SectionDivider({ index, label }: { index: number; label: string }) {
 
 export default function Index() {
   const navigate = useNavigate()
+  const { canInstall, install } = usePwaInstall()
   const [currentSection, setCurrentSection] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -259,6 +261,15 @@ export default function Index() {
             <Icon name="Search" size={15} />
             <span className="hidden md:inline font-sans text-sm">Поиск</span>
           </button>
+          {canInstall && (
+            <button
+              onClick={install}
+              className="hidden md:flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-sans text-sm text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-all"
+            >
+              <Icon name="Download" size={15} />
+              Установить
+            </button>
+          )}
           <MagneticButton variant="secondary" onClick={() => scrollToSection(1)} className="hidden md:flex px-6 py-2.5 text-sm">
             Попробовать
           </MagneticButton>
@@ -271,10 +282,19 @@ export default function Index() {
           </button>
         </div>
 
-        {/* Мобильная полоса лицензии */}
+        {/* Мобильная полоса лицензии + установка */}
         <div className="absolute left-0 right-0 top-full border-b border-foreground/10 bg-background/80 backdrop-blur-md md:hidden">
-          <div className="px-4 py-2">
+          <div className={`px-4 py-2 flex gap-2 ${canInstall ? "flex-col" : ""}`}>
             <LicenseBanner fullWidth />
+            {canInstall && (
+              <button
+                onClick={install}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-foreground/20 px-3 py-1.5 text-xs text-foreground/60 hover:border-foreground/40 hover:text-foreground transition-all"
+              >
+                <Icon name="Download" size={14} />
+                Установить приложение
+              </button>
+            )}
           </div>
         </div>
 
