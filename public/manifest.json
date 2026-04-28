@@ -9,15 +9,15 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/files/574613b2-2252-4a0b-8764-1d3c12b9119a.jpg",
+      "src": "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/cdb64365-d7bf-41f9-85c0-39b1dd2dc03f.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/files/574613b2-2252-4a0b-8764-1d3c12b9119a.jpg",
+      "src": "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/cdb64365-d7bf-41f9-85c0-39b1dd2dc03f.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
