@@ -7,6 +7,7 @@ import { FirefightingSection } from "@/components/sections/firefighting-section"
 import { ReferenceSection } from "@/components/sections/reference-section"
 import { MagneticButton } from "@/components/magnetic-button"
 import GlobalSearch from "@/components/GlobalSearch"
+import { LicenseBanner } from "@/components/license-gate"
 import { useRef, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Icon from "@/components/ui/icon"
@@ -247,6 +248,7 @@ export default function Index() {
         </div>
 
         <div className="flex items-center gap-3">
+          <LicenseBanner />
           <button
             onClick={() => setSearchOpen(true)}
             className="flex items-center gap-2 rounded-lg border border-foreground/20 bg-foreground/5 px-3 py-2 text-foreground/60 transition-colors hover:border-foreground/40 hover:text-foreground"
