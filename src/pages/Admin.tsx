@@ -126,7 +126,7 @@ export default function Admin() {
 
   if (!authed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 [&_*]:!cursor-auto">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <h1 className="font-sans text-3xl font-light text-foreground">Администратор</h1>
@@ -163,7 +163,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10 md:px-10">
+    <div className="min-h-screen bg-background px-4 py-10 md:px-10 [&_*]:!cursor-auto">
       <div className="mx-auto max-w-4xl">
 
         <div className="mb-8 flex items-center justify-between">
