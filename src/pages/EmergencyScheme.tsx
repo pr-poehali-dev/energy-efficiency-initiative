@@ -1003,9 +1003,9 @@ export default function EmergencyScheme() {
                               onClick={async () => {
                                 let imageUrl = img.url
                                 try {
-                                  const res = await fetch(img.url)
-                                  const blob = await res.blob()
-                                  imageUrl = await new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob) })
+                                  const res = await fetch(`https://functions.poehali.dev/6dca2b21-195c-420b-963b-81391c7ce265?url=${encodeURIComponent(img.url)}`)
+                                  const json = await res.json()
+                                  if (json.dataUrl) imageUrl = json.dataUrl
                                 } catch { /* используем url как есть */ }
                                 setLegend(l => [...l, { id: Date.now().toString(), symbol: img.symbol, description: img.description, imageUrl }])
                               }}
