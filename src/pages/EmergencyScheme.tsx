@@ -570,8 +570,8 @@ export default function EmergencyScheme() {
           page: {
             size: {
               orientation: PageOrientation.LANDSCAPE,
-              width: convertMillimetersToTwip(297),
-              height: convertMillimetersToTwip(210),
+              width: convertMillimetersToTwip(210),
+              height: convertMillimetersToTwip(297),
             },
             margin: {
               left: convertMillimetersToTwip(30),
