@@ -896,62 +896,63 @@ export default function EmergencyScheme() {
                     {editingMarkers ? "Готово" : "Разместить маркеры"}
                   </button>
                 </div>
-                <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 17, padding: "20px 10px 20px 30px" }}>
+                <div className="overflow-x-auto">
+                <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 12, padding: "16px 10px 16px 24px", minWidth: 900, width: 900 }}>
 
                   {/* Заголовок */}
-                  <p className="text-center font-bold mb-2" style={{ fontSize: 19 }}>
-                    Схема аварийного участка - позиция&nbsp;&nbsp;&nbsp;{form.position || "—"}
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.date}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.time}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;({form.timezone})
+                  <p className="text-center font-bold mb-2" style={{ fontSize: 13 }}>
+                    Схема аварийного участка — позиция&nbsp;&nbsp;{form.position || "—"}
+                    &nbsp;&nbsp;&nbsp;{form.date}&nbsp;&nbsp;&nbsp;{form.time}&nbsp;&nbsp;({form.timezone})
                   </p>
 
                   {/* Наименование объекта */}
-                  <div className="flex gap-2 mb-1" style={{ fontSize: 17 }}>
+                  <div className="flex gap-1 mb-1" style={{ fontSize: 12 }}>
                     <span className="font-bold whitespace-nowrap">Наименование обслуживаемого объекта:</span>
                     <span>{form.objectName || "—"}</span>
                   </div>
 
                   {/* Три колонки: левая + газы + легенда */}
-                  <div className="flex gap-0 mb-1" style={{ fontSize: 16 }}>
+                  <div className="flex gap-0 mb-1" style={{ fontSize: 11 }}>
                     {/* Левая колонка */}
-                    <div style={{ width: "34%" }}>
-                      <div className="flex gap-1"><span className="font-bold">Вид аварии:</span><span>{form.accidentType}</span></div>
-                      <div className="flex gap-1"><span className="font-bold">Дата и время аварии:</span><span>{form.accidentDate}&nbsp;&nbsp;{form.accidentTime}&nbsp;&nbsp;({form.timezone})</span></div>
-                      <div className="flex gap-1"><span className="font-bold">Место аварии:</span><span className="italic">{form.accidentLocation || "—"}</span></div>
-                      <div className="flex gap-1"><span className="font-bold whitespace-nowrap">Количество воздуха в аварийной выработке:</span><span>{form.airVolume && <>{form.airVolume}&nbsp;м³/с</>}</span></div>
-                      <div className="flex gap-1"><span className="font-bold">Сечение аварийной выработки:</span><span>{form.sectionArea && <>{form.sectionArea}&nbsp;м²</>}</span></div>
-                      <div className="flex gap-1"><span className="font-bold">Телефон КП:</span><span>{form.phoneCP || "—"}</span></div>
+                    <div style={{ width: "36%", paddingRight: 8 }}>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Вид аварии:</span><span>{form.accidentType || "—"}</span></div>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Дата и время аварии:</span><span>{form.accidentDate}&nbsp;{form.accidentTime}&nbsp;({form.timezone})</span></div>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Место аварии:</span><span className="italic">{form.accidentLocation || "—"}</span></div>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Кол-во воздуха:</span><span>{form.airVolume ? <>{form.airVolume}&nbsp;м³/с</> : "—"}</span></div>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Сечение выработки:</span><span>{form.sectionArea ? <>{form.sectionArea}&nbsp;м²</> : "—"}</span></div>
+                      <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Телефон КП:</span><span>{form.phoneCP || "—"}</span></div>
                     </div>
 
                     {/* Центр: состав атмосферы */}
-                    <div style={{ width: "42%" }} className="pl-2">
-                      <p className="font-bold underline mb-0.5">Состав рудничной атмосферы:</p>
-                      <div className="grid grid-cols-3 gap-x-3" style={{ fontSize: 15 }}>
-                        {[["CO", form.co], ["CO2", form.co2], ["SO2", form.so2], ["O2", form.o2], ["CH4", form.ch4], ["NO-NO2", form.nono2], ["t°", form.temperature], ["SO2", form.so2_2]].filter(([, v]) => v).map(([l, v]) => (
-                          <span key={l}><b>{l}</b>- {v}</span>
+                    <div style={{ width: "38%", borderLeft: "1px solid #ccc", paddingLeft: 8, paddingRight: 8 }}>
+                      <p className="font-bold underline mb-1">Состав рудничной атмосферы:</p>
+                      <div className="grid gap-x-2" style={{ gridTemplateColumns: "repeat(3, 1fr)", fontSize: 11 }}>
+                        {[["CO", form.co], ["CO₂", form.co2], ["SO₂", form.so2], ["O₂", form.o2], ["CH₄", form.ch4], ["NO-NO₂", form.nono2], ["t°", form.temperature], ["SO₂", form.so2_2]].filter(([, v]) => v).map(([l, v]) => (
+                          <span key={l} className="whitespace-nowrap"><b>{l}</b>: {v}</span>
                         ))}
                       </div>
                       {form.smokeLevel && (
-                        <p style={{ fontSize: 15 }} className="mt-0.5"><b>Степень задымлённости</b>- {form.smokeLevel}</p>
+                        <p className="mt-1" style={{ fontSize: 11 }}><b>Задымлённость:</b> {form.smokeLevel}</p>
                       )}
                     </div>
 
                     {/* Правая колонка: условные обозначения */}
                     {legend.length > 0 && (
-                      <div style={{ width: "24%" }} className="pl-2 border-l border-gray-300">
-                        <p className="font-bold underline mb-1" style={{ fontSize: 16 }}>Условные обозначения:</p>
-                        <div className="flex flex-col gap-1">
+                      <div style={{ width: "26%", borderLeft: "1px solid #ccc", paddingLeft: 8 }}>
+                        <p className="font-bold underline mb-1" style={{ fontSize: 11 }}>Условные обозначения:</p>
+                        <div className="flex flex-col" style={{ gap: 3 }}>
                           {legend.map(item => {
                             const placed = markers.some(m => m.legendId === item.id)
                             const isPlacing = placingLegendId === item.id
                             return (
-                              <div key={item.id} className="flex items-center gap-1" style={{ fontSize: 15 }}>
-                                <span className="shrink-0" style={{ width: 22, height: 22, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              <div key={item.id} className="flex items-center" style={{ gap: 4, fontSize: 10 }}>
+                                <span className="shrink-0" style={{ width: 18, height: 18, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                   {item.imageUrl
-                                    ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 20, height: 20, objectFit: "contain" }} />
-                                    : <span className="border border-gray-500 rounded px-1 font-bold leading-tight">{item.symbol}</span>
+                                    ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 16, height: 16, objectFit: "contain" }} />
+                                    : <span style={{ border: "1px solid #555", borderRadius: 2, padding: "0 2px", fontWeight: "bold", fontSize: 9 }}>{item.symbol}</span>
                                   }
                                 </span>
-                                <span className="flex-1 leading-tight">{item.description}</span>
+                                <span style={{ flex: 1, lineHeight: 1.2 }}>{item.description}</span>
                                 {editingMarkers && (
                                   <button
                                     title={placed ? "Убрать" : "Разместить"}
@@ -974,7 +975,7 @@ export default function EmergencyScheme() {
                   <div
                     ref={imageContainerRef}
                     className={`relative border border-gray-400 bg-gray-50 select-none overflow-hidden ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
-                    style={{ width: "100%", minHeight: 300 }}
+                    style={{ width: "100%", minHeight: 260 }}
                     onClick={editingMarkers ? handleImageAreaClick : undefined}
                     onMouseMove={editingMarkers ? handleMouseMove : undefined}
                     onMouseUp={editingMarkers ? handleMouseUp : undefined}
@@ -983,7 +984,7 @@ export default function EmergencyScheme() {
                     {imageUrl ? (
                       <img src={imageUrl} alt="Схема" className="block pointer-events-none" style={{ width: "100%", height: "auto" }} />
                     ) : (
-                      <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 300 }}>Схема участка не загружена</div>
+                      <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 260 }}>Схема участка не загружена</div>
                     )}
                     {editingMarkers && placingLegendId && (
                       <div className="absolute inset-0 border-2 border-dashed border-blue-400 pointer-events-none flex items-center justify-center">
@@ -1002,8 +1003,8 @@ export default function EmergencyScheme() {
                           onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
                         >
                           {item.imageUrl
-                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 32, height: 32, objectFit: "contain", background: "white" }} />
-                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 14, lineHeight: 1.3 }}>{item.symbol}</span>
+                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 28, height: 28, objectFit: "contain", background: "white" }} />
+                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 12, lineHeight: 1.3 }}>{item.symbol}</span>
                           }
                         </div>
                       )
@@ -1011,10 +1012,11 @@ export default function EmergencyScheme() {
                   </div>
 
                   {/* Подписи */}
-                  <div className="flex justify-between pt-2" style={{ fontSize: 16 }}>
-                    <span className="font-bold">Руководитель горноспасательных работ:&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 140 }}>{form.headRescue}</span></span>
-                    <span>Помощник командира отряда&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 120 }}>{form.assistantCommander}</span>&nbsp;/{form.commanderName}/</span>
+                  <div className="flex justify-between pt-2" style={{ fontSize: 11 }}>
+                    <span className="font-bold">Руководитель горноспасательных работ:&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 120 }}>{form.headRescue}</span></span>
+                    <span>Помощник командира отряда&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 100 }}>{form.assistantCommander}</span>&nbsp;/{form.commanderName}/</span>
                   </div>
+                </div>
                 </div>
                 </>
               )}
