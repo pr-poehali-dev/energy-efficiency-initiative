@@ -315,6 +315,11 @@ export default function EmergencyScheme() {
     const el = previewRef.current
     if (!el) return
 
+    // Скрываем интерфейс маркеров перед печатью
+    const wasEditingMarkers = editingMarkers
+    setEditingMarkers(false)
+    setPlacingLegendId(null)
+
     // Фиксируем ширину — превью уже имеет правильную раскладку (обозначения справа от картинки)
     const prevWidth = el.style.width
     const prevMinWidth = el.style.minWidth
@@ -332,6 +337,7 @@ export default function EmergencyScheme() {
 
     el.style.width = prevWidth
     el.style.minWidth = prevMinWidth
+    if (wasEditingMarkers) setEditingMarkers(true)
 
     const imgData = canvas.toDataURL("image/png")
 
