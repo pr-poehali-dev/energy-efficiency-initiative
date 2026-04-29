@@ -1032,10 +1032,10 @@ export default function EmergencyScheme() {
                     <span>{form.objectName || "—"}</span>
                   </div>
 
-                  {/* Три колонки: левая + газы + легенда */}
+                  {/* Две колонки: левая инфо + правая газы */}
                   <div className="flex gap-0 mb-1" style={{ fontSize: 11 }}>
                     {/* Левая колонка */}
-                    <div style={{ width: "36%", paddingRight: 8 }}>
+                    <div style={{ width: "50%", paddingRight: 8 }}>
                       <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Вид аварии:</span><span>{form.accidentType || "—"}</span></div>
                       <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Дата и время аварии:</span><span>{form.accidentDate}&nbsp;{form.accidentTime}&nbsp;({form.timezone})</span></div>
                       <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Место аварии:</span><span className="italic">{form.accidentLocation || "—"}</span></div>
@@ -1044,8 +1044,8 @@ export default function EmergencyScheme() {
                       <div className="flex gap-1 flex-wrap"><span className="font-bold whitespace-nowrap">Телефон КП:</span><span>{form.phoneCP || "—"}</span></div>
                     </div>
 
-                    {/* Центр: состав атмосферы */}
-                    <div style={{ width: "38%", borderLeft: "1px solid #ccc", paddingLeft: 8, paddingRight: 8 }}>
+                    {/* Правая: состав атмосферы */}
+                    <div style={{ width: "50%", borderLeft: "1px solid #ccc", paddingLeft: 8 }}>
                       <p className="font-bold underline mb-1">Состав рудничной атмосферы:</p>
                       <div className="grid gap-x-2" style={{ gridTemplateColumns: "repeat(3, 1fr)", fontSize: 11 }}>
                         {[["CO", form.co], ["CO₂", form.co2], ["SO₂", form.so2], ["O₂", form.o2], ["CH₄", form.ch4], ["NO-NO₂", form.nono2], ["t°", form.temperature], ["SO₂", form.so2_2]].filter(([, v]) => v).map(([l, v]) => (
@@ -1056,21 +1056,67 @@ export default function EmergencyScheme() {
                         <p className="mt-1" style={{ fontSize: 11 }}><b>Задымлённость:</b> {form.smokeLevel}</p>
                       )}
                     </div>
+                  </div>
 
-                    {/* Правая колонка: условные обозначения */}
+                  {/* Разделитель */}
+                  <div style={{ borderTop: "1px solid #ccc", marginBottom: 4 }} />
+
+                  {/* Картинка + условные обозначения рядом */}
+                  <div className="flex gap-0" style={{ minHeight: 240 }}>
+                    {/* Картинка схемы */}
+                    <div
+                      ref={imageContainerRef}
+                      className={`relative bg-gray-50 select-none overflow-hidden ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
+                      style={{ flex: 1, minHeight: 240, border: "1px solid #9ca3af" }}
+                      onClick={editingMarkers ? handleImageAreaClick : undefined}
+                      onMouseMove={editingMarkers ? handleMouseMove : undefined}
+                      onMouseUp={editingMarkers ? handleMouseUp : undefined}
+                      onMouseLeave={editingMarkers ? handleMouseUp : undefined}
+                    >
+                      {imageUrl ? (
+                        <img src={imageUrl} alt="Схема" className="block pointer-events-none" style={{ width: "100%", height: "auto" }} />
+                      ) : (
+                        <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 240 }}>Схема участка не загружена</div>
+                      )}
+                      {editingMarkers && placingLegendId && (
+                        <div className="absolute inset-0 border-2 border-dashed border-blue-400 pointer-events-none flex items-center justify-center">
+                          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
+                        </div>
+                      )}
+                      {markers.map(mk => {
+                        const item = legend.find(l => l.id === mk.legendId)
+                        if (!item) return null
+                        return (
+                          <div
+                            key={mk.legendId}
+                            className={`absolute ${editingMarkers ? "cursor-grab active:cursor-grabbing" : ""}`}
+                            style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%,-50%)", zIndex: 10 }}
+                            onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
+                            onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
+                          >
+                            {item.imageUrl
+                              ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 28, height: 28, objectFit: "contain", background: "white" }} />
+                              : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 12, lineHeight: 1.3 }}>{item.symbol}</span>
+                            }
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Условные обозначения — справа от картинки */}
                     {legend.length > 0 && (
-                      <div style={{ width: "26%", borderLeft: "1px solid #ccc", paddingLeft: 8 }}>
-                        <p className="font-bold underline mb-1" style={{ fontSize: 11 }}>Условные обозначения:</p>
+                      <div style={{ width: 160, borderLeft: "1px solid #ccc", paddingLeft: 6, paddingTop: 4, flexShrink: 0 }}>
+                        <p className="font-bold underline mb-1" style={{ fontSize: 10 }}>Условные обозначения:</p>
                         <div className="flex flex-col" style={{ gap: 3 }}>
                           {legend.map(item => {
                             const placed = markers.some(m => m.legendId === item.id)
                             const isPlacing = placingLegendId === item.id
                             return (
-                              <div key={item.id} className="flex items-center" style={{ gap: 4, fontSize: 10 }}>
-                                <span className="shrink-0" style={{ width: 18, height: 18, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              <div key={item.id} className="flex items-center" style={{ gap: 4, fontSize: 9 }}>
+                                <span className="shrink-0" style={{ width: 16, height: 16, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                   {item.imageUrl
-                                    ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 16, height: 16, objectFit: "contain" }} />
-                                    : <span style={{ border: "1px solid #555", borderRadius: 2, padding: "0 2px", fontWeight: "bold", fontSize: 9 }}>{item.symbol}</span>
+                                    ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 14, height: 14, objectFit: "contain" }} />
+                                    : <span style={{ border: "1px solid #555", borderRadius: 2, padding: "0 2px", fontWeight: "bold", fontSize: 8 }}>{item.symbol}</span>
                                   }
                                 </span>
                                 <span style={{ flex: 1, lineHeight: 1.2 }}>{item.description}</span>
@@ -1086,50 +1132,10 @@ export default function EmergencyScheme() {
                           })}
                         </div>
                         {editingMarkers && markers.length > 0 && (
-                          <p className="text-gray-400 mt-1" style={{ fontSize: 9 }}>Двойной клик — убрать маркер</p>
+                          <p className="text-gray-400 mt-1" style={{ fontSize: 8 }}>Двойной клик — убрать маркер</p>
                         )}
                       </div>
                     )}
-                  </div>
-
-                  {/* Картинка схемы — на всю ширину */}
-                  <div
-                    ref={imageContainerRef}
-                    className={`relative border border-gray-400 bg-gray-50 select-none overflow-hidden ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
-                    style={{ width: "100%", minHeight: 260 }}
-                    onClick={editingMarkers ? handleImageAreaClick : undefined}
-                    onMouseMove={editingMarkers ? handleMouseMove : undefined}
-                    onMouseUp={editingMarkers ? handleMouseUp : undefined}
-                    onMouseLeave={editingMarkers ? handleMouseUp : undefined}
-                  >
-                    {imageUrl ? (
-                      <img src={imageUrl} alt="Схема" className="block pointer-events-none" style={{ width: "100%", height: "auto" }} />
-                    ) : (
-                      <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 260 }}>Схема участка не загружена</div>
-                    )}
-                    {editingMarkers && placingLegendId && (
-                      <div className="absolute inset-0 border-2 border-dashed border-blue-400 pointer-events-none flex items-center justify-center">
-                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
-                      </div>
-                    )}
-                    {markers.map(mk => {
-                      const item = legend.find(l => l.id === mk.legendId)
-                      if (!item) return null
-                      return (
-                        <div
-                          key={mk.legendId}
-                          className={`absolute ${editingMarkers ? "cursor-grab active:cursor-grabbing" : ""}`}
-                          style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%,-50%)", zIndex: 10 }}
-                          onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
-                          onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
-                        >
-                          {item.imageUrl
-                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 28, height: 28, objectFit: "contain", background: "white" }} />
-                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 12, lineHeight: 1.3 }}>{item.symbol}</span>
-                          }
-                        </div>
-                      )
-                    })}
                   </div>
 
                   {/* Подписи */}
