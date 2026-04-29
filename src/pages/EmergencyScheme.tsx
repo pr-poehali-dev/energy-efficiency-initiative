@@ -864,22 +864,22 @@ export default function EmergencyScheme() {
                     {editingMarkers ? "Готово" : "Разместить маркеры"}
                   </button>
                 </div>
-                <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 13, padding: "20px 10px 20px 30px" }}>
+                <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 17, padding: "20px 10px 20px 30px" }}>
 
                   {/* Заголовок */}
-                  <p className="text-center font-bold mb-2" style={{ fontSize: 15 }}>
+                  <p className="text-center font-bold mb-2" style={{ fontSize: 19 }}>
                     Схема аварийного участка - позиция&nbsp;&nbsp;&nbsp;{form.position || "—"}
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.date}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.time}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;({form.timezone})
                   </p>
 
                   {/* Наименование объекта */}
-                  <div className="flex gap-2 mb-1" style={{ fontSize: 13 }}>
+                  <div className="flex gap-2 mb-1" style={{ fontSize: 17 }}>
                     <span className="font-bold whitespace-nowrap">Наименование обслуживаемого объекта:</span>
                     <span>{form.objectName || "—"}</span>
                   </div>
 
                   {/* Три колонки: левая + газы + легенда */}
-                  <div className="flex gap-0 mb-1" style={{ fontSize: 12 }}>
+                  <div className="flex gap-0 mb-1" style={{ fontSize: 16 }}>
                     {/* Левая колонка */}
                     <div style={{ width: "34%" }}>
                       <div className="flex gap-1"><span className="font-bold">Вид аварии:</span><span>{form.accidentType}</span></div>
@@ -893,26 +893,26 @@ export default function EmergencyScheme() {
                     {/* Центр: состав атмосферы */}
                     <div style={{ width: "42%" }} className="pl-2">
                       <p className="font-bold underline mb-0.5">Состав рудничной атмосферы:</p>
-                      <div className="grid grid-cols-3 gap-x-3" style={{ fontSize: 11 }}>
+                      <div className="grid grid-cols-3 gap-x-3" style={{ fontSize: 15 }}>
                         {[["CO", form.co], ["CO2", form.co2], ["SO2", form.so2], ["O2", form.o2], ["CH4", form.ch4], ["NO-NO2", form.nono2], ["t°", form.temperature], ["SO2", form.so2_2]].filter(([, v]) => v).map(([l, v]) => (
                           <span key={l}><b>{l}</b>- {v}</span>
                         ))}
                       </div>
                       {form.smokeLevel && (
-                        <p style={{ fontSize: 11 }} className="mt-0.5"><b>Степень задымлённости</b>- {form.smokeLevel}</p>
+                        <p style={{ fontSize: 15 }} className="mt-0.5"><b>Степень задымлённости</b>- {form.smokeLevel}</p>
                       )}
                     </div>
 
                     {/* Правая колонка: условные обозначения */}
                     {legend.length > 0 && (
                       <div style={{ width: "24%" }} className="pl-2 border-l border-gray-300">
-                        <p className="font-bold underline mb-1" style={{ fontSize: 12 }}>Условные обозначения:</p>
+                        <p className="font-bold underline mb-1" style={{ fontSize: 16 }}>Условные обозначения:</p>
                         <div className="flex flex-col gap-1">
                           {legend.map(item => {
                             const placed = markers.some(m => m.legendId === item.id)
                             const isPlacing = placingLegendId === item.id
                             return (
-                              <div key={item.id} className="flex items-center gap-1" style={{ fontSize: 11 }}>
+                              <div key={item.id} className="flex items-center gap-1" style={{ fontSize: 15 }}>
                                 <span className="shrink-0" style={{ width: 22, height: 22, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                                   {item.imageUrl
                                     ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 20, height: 20, objectFit: "contain" }} />
@@ -970,8 +970,8 @@ export default function EmergencyScheme() {
                           onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
                         >
                           {item.imageUrl
-                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 28, height: 28, objectFit: "contain", background: "white" }} />
-                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 11, lineHeight: 1.3 }}>{item.symbol}</span>
+                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 32, height: 32, objectFit: "contain", background: "white" }} />
+                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 14, lineHeight: 1.3 }}>{item.symbol}</span>
                           }
                         </div>
                       )
@@ -979,7 +979,7 @@ export default function EmergencyScheme() {
                   </div>
 
                   {/* Подписи */}
-                  <div className="flex justify-between pt-2" style={{ fontSize: 12 }}>
+                  <div className="flex justify-between pt-2" style={{ fontSize: 16 }}>
                     <span className="font-bold">Руководитель горноспасательных работ:&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 140 }}>{form.headRescue}</span></span>
                     <span>Помощник командира отряда&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 120 }}>{form.assistantCommander}</span>&nbsp;/{form.commanderName}/</span>
                   </div>
