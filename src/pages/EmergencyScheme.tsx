@@ -74,7 +74,7 @@ const LEGEND_IMAGES: { url: string; description: string; symbol: string }[] = [
 
 const DEFAULT_LEGEND: LegendItem[] = [
   { id: "1", symbol: "🏭", description: "Надшахтное здание" },
-  { id: "2", symbol: "🔥", description: "Пожар", imageUrl: LEGEND_IMAGES[0].url },
+  { id: "2", symbol: "🔥", description: "Пожар" },
   { id: "3", symbol: "ВГК", description: "Стационарный пункт ВГК" },
   { id: "4", symbol: "→", description: "Отделение в движении" },
 ]
@@ -358,6 +358,23 @@ export default function EmergencyScheme() {
     setEditingMarkers(false)
     setPlacingLegendId(null)
     await new Promise(r => requestAnimationFrame(r))
+
+    // Загружаем все внешние картинки через fetch → base64, подменяем src
+    const imgEls = Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    const origSrcs: [HTMLImageElement, string][] = []
+    await Promise.all(imgEls.map(async img => {
+      const url = img.src
+      if (!url.startsWith("http")) return
+      try {
+        const res = await fetch(url)
+        const blob = await res.blob()
+        const b64 = await new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob) })
+        origSrcs.push([img, url])
+        img.src = b64
+      } catch { /* оставляем как есть */ }
+    }))
+
+    await new Promise(r => requestAnimationFrame(r))
     await new Promise(r => requestAnimationFrame(r))
 
     const prevWidth = el.style.width
@@ -368,15 +385,17 @@ export default function EmergencyScheme() {
 
     const canvas = await html2canvas(el, {
       scale: 2,
-      useCORS: true,
+      useCORS: false,
       allowTaint: true,
       backgroundColor: "#ffffff",
       width: 1100,
       height: el.scrollHeight,
     })
 
+    // Восстанавливаем оригинальные src
     el.style.width = prevWidth
     el.style.minWidth = prevMinWidth
+    origSrcs.forEach(([img, url]) => { img.src = url })
     if (wasEditing) setEditingMarkers(true)
 
     const link = document.createElement("a")
@@ -981,7 +1000,15 @@ export default function EmergencyScheme() {
                             <button
                               key={img.url}
                               title={img.description}
-                              onClick={() => setLegend(l => [...l, { id: Date.now().toString(), symbol: img.symbol, description: img.description, imageUrl: img.url }])}
+                              onClick={async () => {
+                                let imageUrl = img.url
+                                try {
+                                  const res = await fetch(img.url)
+                                  const blob = await res.blob()
+                                  imageUrl = await new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob) })
+                                } catch { /* используем url как есть */ }
+                                setLegend(l => [...l, { id: Date.now().toString(), symbol: img.symbol, description: img.description, imageUrl }])
+                              }}
                               className="flex flex-col items-center gap-1 p-1.5 rounded-lg border border-foreground/15 hover:border-primary/50 bg-foreground/5 hover:bg-primary/5 transition-colors"
                             >
                               <img src={img.url} alt={img.description} className="w-8 h-8 object-contain" />
