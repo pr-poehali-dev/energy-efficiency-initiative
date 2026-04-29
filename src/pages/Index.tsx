@@ -429,8 +429,9 @@ export default function Index() {
         <section
           id="explosion"
           ref={(el) => { sectionRefs.current[3] = el }}
-          className="relative z-10 mx-auto max-w-7xl px-6 py-20 md:px-12 lg:px-16"
+          className="relative z-10 w-full px-6 py-20 md:px-12 lg:px-16"
         >
+          <div className="mx-auto w-full max-w-7xl">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-xl">
               <p className="mb-2 font-mono text-xs text-foreground/40 uppercase tracking-widest">Анализ газовой смеси</p>
@@ -463,6 +464,7 @@ export default function Index() {
                 <p className="font-mono text-xs text-foreground/70">НПВ {lel} · ВПВ {uel}</p>
               </div>
             ))}
+          </div>
           </div>
         </section>
         <SectionDivider index={4} label="Справочник" />
