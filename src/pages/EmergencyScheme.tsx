@@ -332,157 +332,80 @@ export default function EmergencyScheme() {
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
 
   const exportToPdf = async () => {
-    // Вспомогательная функция: URL → base64 dataURL через fetch (обходит CORS для img)
+    const el = previewRef.current
+    if (!el) return
+
+    // 1. Загружаем все внешние картинки через fetch → base64
     const fetchBase64 = async (url: string): Promise<string | null> => {
       try {
         const res = await fetch(url)
         const blob = await res.blob()
-        return await new Promise<string>(res2 => { const r = new FileReader(); r.onload = () => res2(r.result as string); r.readAsDataURL(blob) })
+        return await new Promise<string>(r => { const fr = new FileReader(); fr.onload = () => r(fr.result as string); fr.readAsDataURL(blob) })
       } catch { return null }
     }
 
-    // A4 landscape: 297 x 210 мм
-    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
-    const mL = 20, mT = 15, mR = 10, mB = 15
-    const pageW = 297, pageH = 210
-    const printW = pageW - mL - mR   // 267мм
-    const printH = pageH - mT - mB   // 180мм
-
-    // --- Загружаем все картинки обозначений заранее ---
-    const legendBase64: Record<string, string> = {}
-    await Promise.all(legend.map(async item => {
-      if (item.imageUrl) {
-        const b64 = await fetchBase64(item.imageUrl)
-        if (b64) legendBase64[item.id] = b64
+    // Собираем все уникальные URL картинок в превью
+    const allImgEls = Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    const urlMap: Record<string, string> = {}
+    await Promise.all(allImgEls.map(async img => {
+      const url = img.getAttribute("src") || ""
+      if (url && !urlMap[url]) {
+        const b64 = await fetchBase64(url)
+        if (b64) urlMap[url] = b64
       }
     }))
 
-    // --- Шапка: снимаем через html2canvas только div шапки (без картинок обозначений) ---
-    // Временный div с данными формы (без img из CDN)
-    const headerDiv = document.createElement("div")
-    headerDiv.style.cssText = "position:fixed;left:-9999px;top:0;width:1100px;background:white;padding:12px 20px;font-family:Times New Roman,serif;"
-    headerDiv.innerHTML = `
-      <p style="text-align:center;font-weight:bold;font-size:15px;margin:0 0 6px">Схема аварийного участка — позиция&nbsp;&nbsp;${form.position || "—"}&nbsp;&nbsp;&nbsp;${form.date}&nbsp;&nbsp;&nbsp;${form.time}&nbsp;&nbsp;(${form.timezone})</p>
-      <p style="font-size:13px;margin:0 0 5px"><b>Наименование обслуживаемого объекта:</b>&nbsp;${form.objectName || "—"}</p>
-      <div style="display:flex;gap:0;font-size:12px">
-        <div style="width:50%;padding-right:10px">
-          <div><b>Вид аварии:</b> ${form.accidentType || "—"}</div>
-          <div><b>Дата и время аварии:</b> ${form.accidentDate} ${form.accidentTime} (${form.timezone})</div>
-          <div><b>Место аварии:</b> <i>${form.accidentLocation || "—"}</i></div>
-          <div><b>Кол-во воздуха:</b> ${form.airVolume ? form.airVolume + " м³/с" : "—"}</div>
-          <div><b>Сечение выработки:</b> ${form.sectionArea ? form.sectionArea + " м²" : "—"}</div>
-          <div><b>Телефон КП:</b> ${form.phoneCP || "—"}</div>
-        </div>
-        <div style="width:50%;border-left:1px solid #ccc;padding-left:10px">
-          <p style="font-weight:bold;text-decoration:underline;margin:0 0 4px">Состав рудничной атмосферы:</p>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px 8px">
-            ${[["CO", form.co], ["CO₂", form.co2], ["SO₂", form.so2], ["O₂", form.o2], ["CH₄", form.ch4], ["NO-NO₂", form.nono2], ["t°", form.temperature], ["Задымл.", form.smokeLevel]].filter(([, v]) => v).map(([l, v]) => `<span><b>${l}:</b> ${v}</span>`).join("")}
-          </div>
-        </div>
-      </div>
-    `
-    document.body.appendChild(headerDiv)
+    // 2. Заменяем src на base64 прямо в DOM
+    allImgEls.forEach(img => {
+      const url = img.getAttribute("src") || ""
+      if (urlMap[url]) img.setAttribute("src", urlMap[url])
+    })
+
+    // Скрываем кнопки маркеров
+    const wasEditing = editingMarkers
+    setEditingMarkers(false)
+    setPlacingLegendId(null)
     await new Promise(r => requestAnimationFrame(r))
-    const headerCanvas = await html2canvas(headerDiv, { scale: 2, backgroundColor: "#ffffff", width: 1100 })
-    document.body.removeChild(headerDiv)
-
-    const headerImgData = headerCanvas.toDataURL("image/png")
-    const headerH = (headerCanvas.height / headerCanvas.width) * printW
-    pdf.addImage(headerImgData, "PNG", mL, mT, printW, headerH)
-
-    // Разделитель
-    const schemeTopY = mT + headerH + 1
-    pdf.setDrawColor(180); pdf.setLineWidth(0.2)
-    pdf.line(mL, schemeTopY, mL + printW, schemeTopY)
-
-    // --- Зона картинки + обозначений ---
-    const sigH = 10
-    const schemeH = printH - headerH - sigH - 3
-    const legColW = legend.length > 0 ? 52 : 0
-    const imgZoneW = printW - legColW
-
-    // Картинка схемы с маркерами
-    if (imageUrl) {
-      const compositeBuffer = await renderImageWithMarkers()
-      let imgDataUrl = imageUrl
-      if (compositeBuffer) {
-        const blob = new Blob([compositeBuffer], { type: "image/png" })
-        imgDataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(blob) })
-      } else {
-        const b64 = await fetchBase64(imageUrl)
-        if (b64) imgDataUrl = b64
-      }
-      const tmp = new Image(); await new Promise<void>(res => { tmp.onload = () => res(); tmp.src = imgDataUrl })
-      const ratio = tmp.naturalWidth / tmp.naturalHeight
-      let iw = imgZoneW, ih = iw / ratio
-      if (ih > schemeH) { ih = schemeH; iw = ih * ratio }
-      const fmt = imgDataUrl.startsWith("data:image/jpeg") || imgDataUrl.startsWith("data:image/jpg") ? "JPEG" : "PNG"
-      pdf.addImage(imgDataUrl, fmt, mL, schemeTopY + 1, iw, ih)
-    }
-
-    // Условные обозначения — строим программно через jsPDF с картинками
-    if (legend.length > 0) {
-      pdf.setDrawColor(180); pdf.setLineWidth(0.2)
-      pdf.line(mL + imgZoneW, schemeTopY, mL + imgZoneW, mT + printH - sigH)
-
-      const legX = mL + imgZoneW + 2
-      let legY = schemeTopY + 5
-
-      // Заголовок через canvas (кириллица)
-      const legTitleDiv = document.createElement("div")
-      legTitleDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:300px;background:white;font-family:Times New Roman,serif;font-size:14px;font-weight:bold;text-decoration:underline;`
-      legTitleDiv.textContent = "Условные обозначения:"
-      document.body.appendChild(legTitleDiv)
-      await new Promise(r => requestAnimationFrame(r))
-      const legTitleCanvas = await html2canvas(legTitleDiv, { scale: 2, backgroundColor: "#ffffff", width: 300 })
-      document.body.removeChild(legTitleDiv)
-      const legTitleH = (legTitleCanvas.height / legTitleCanvas.width) * (legColW - 3)
-      pdf.addImage(legTitleCanvas.toDataURL("image/png"), "PNG", legX, schemeTopY + 1, legColW - 3, legTitleH)
-      legY = schemeTopY + 1 + legTitleH + 2
-
-      for (const item of legend) {
-        if (legY > mT + printH - sigH - 2) break
-        const iconSize = 5
-        // Иконка
-        if (legendBase64[item.id]) {
-          try {
-            pdf.addImage(legendBase64[item.id], "PNG", legX, legY - iconSize + 0.5, iconSize, iconSize)
-          } catch { /* skip */ }
-        }
-        // Описание через html2canvas (кириллица)
-        const descDiv = document.createElement("div")
-        descDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:240px;background:white;font-family:Times New Roman,serif;font-size:11px;line-height:1.2;`
-        descDiv.textContent = item.description
-        document.body.appendChild(descDiv)
-        await new Promise(r => requestAnimationFrame(r))
-        const descCanvas = await html2canvas(descDiv, { scale: 2, backgroundColor: "#ffffff", width: 240 })
-        document.body.removeChild(descDiv)
-        const descW = legColW - iconSize - 4
-        const descH = (descCanvas.height / descCanvas.width) * descW
-        pdf.addImage(descCanvas.toDataURL("image/png"), "PNG", legX + iconSize + 2, legY - descH + 0.5, descW, descH)
-        legY += Math.max(descH, iconSize) + 1.5
-      }
-    }
-
-    // Подписи
-    const sigY = mT + printH - sigH
-    pdf.setDrawColor(180); pdf.setLineWidth(0.2)
-    pdf.line(mL, sigY, mL + printW, sigY)
-
-    const sigDiv = document.createElement("div")
-    sigDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:1100px;background:white;font-family:Times New Roman,serif;font-size:13px;display:flex;justify-content:space-between;padding:3px 0;`
-    sigDiv.innerHTML = `
-      <span><b>Руководитель горноспасательных работ:</b>&nbsp;<span style="display:inline-block;min-width:120px;border-bottom:1px solid #333">${form.headRescue || ""}</span></span>
-      <span>Помощник командира отряда&nbsp;<span style="display:inline-block;min-width:100px;border-bottom:1px solid #333">${form.assistantCommander || ""}</span>&nbsp;/${form.commanderName || ""}/</span>
-    `
-    document.body.appendChild(sigDiv)
     await new Promise(r => requestAnimationFrame(r))
-    const sigCanvas = await html2canvas(sigDiv, { scale: 2, backgroundColor: "#ffffff", width: 1100 })
-    document.body.removeChild(sigDiv)
-    const sigImgH = (sigCanvas.height / sigCanvas.width) * printW
-    pdf.addImage(sigCanvas.toDataURL("image/png"), "PNG", mL, sigY + 1, printW, sigImgH)
 
-    // Рамка ГОСТ
+    // 3. Снимаем единый скриншот
+    const prevWidth = el.style.width
+    const prevMinWidth = el.style.minWidth
+    el.style.width = "1100px"
+    el.style.minWidth = "1100px"
+    await new Promise(r => requestAnimationFrame(r))
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: false,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      width: 1100,
+      height: el.scrollHeight,
+    })
+
+    // 4. Восстанавливаем DOM
+    el.style.width = prevWidth
+    el.style.minWidth = prevMinWidth
+    allImgEls.forEach(img => {
+      const b64 = img.getAttribute("src") || ""
+      const orig = Object.entries(urlMap).find(([, v]) => v === b64)?.[0]
+      if (orig) img.setAttribute("src", orig)
+    })
+    if (wasEditing) setEditingMarkers(true)
+
+    // 5. Вставляем в PDF
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+    const mL = 20, mT = 15, mR = 10, mB = 15
+    const printW = 297 - mL - mR
+    const printH = 210 - mT - mB
+
+    const ratio = canvas.width / canvas.height
+    let w = printW, h = w / ratio
+    if (h > printH) { h = printH; w = h * ratio }
+
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", mL + (printW - w) / 2, mT + (printH - h) / 2, w, h)
+
     pdf.setDrawColor(0); pdf.setLineWidth(0.5)
     pdf.rect(mL, mT, printW, printH)
     pdf.setLineWidth(1.2)
