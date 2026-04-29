@@ -350,6 +350,13 @@ export default function Index() {
                 <span>Треугольник взрываемости</span>
                 <Icon name="ExternalLink" size={14} className="text-foreground/40" />
               </button>
+              <button
+                onClick={() => { navigate("/emergency-scheme"); setMobileMenuOpen(false) }}
+                className="text-left px-3 py-2.5 rounded-lg font-sans text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center justify-between"
+              >
+                <span className="flex items-center gap-2"><Icon name="AlertTriangle" size={14} className="text-accent" />Схема аварии</span>
+                <Icon name="ExternalLink" size={14} className="text-foreground/40" />
+              </button>
               <div className="my-2 h-px bg-foreground/10" />
               <button
                 onClick={() => { setMobileMenuOpen(false); setSearchOpen(true) }}
