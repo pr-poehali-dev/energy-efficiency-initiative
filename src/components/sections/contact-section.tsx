@@ -33,7 +33,7 @@ export function ContactSection({ sectionRef }: { sectionRef?: (el: HTMLElement |
   return (
     <section
       ref={(el) => { ref.current = el; sectionRef?.(el) }}
-      className="flex min-h-screen w-full items-center px-4 py-24 md:px-12 lg:px-16"
+      className="flex min-h-screen w-full items-center px-6 py-24 md:px-12 lg:px-16"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="grid gap-8 md:grid-cols-[1.2fr_1fr] md:gap-16 lg:gap-24">

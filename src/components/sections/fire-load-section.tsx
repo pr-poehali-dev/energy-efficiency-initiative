@@ -89,7 +89,7 @@ export function FireLoadSection() {
   return (
     <section
       ref={ref}
-      className="flex h-screen w-screen shrink-0 snap-start flex-col px-4 pt-20 pb-6 md:px-12 lg:px-16"
+      className="flex h-screen w-full shrink-0 snap-start flex-col px-6 pt-20 pb-6 md:px-12 lg:px-16"
     >
       <div className="mx-auto flex w-full max-w-7xl flex-col h-full">
         {/* Header */}
