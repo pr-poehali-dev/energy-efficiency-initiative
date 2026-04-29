@@ -294,6 +294,52 @@ export default function EmergencyScheme() {
     setLegend(l => l.map(item => item.id === id ? { ...item, [field]: value } : item))
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
 
+  const renderImageWithMarkers = (): Promise<ArrayBuffer | null> => {
+    return new Promise(resolve => {
+      if (!imageUrl || markers.length === 0) { resolve(null); return }
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        const ctx = canvas.getContext("2d")
+        if (!ctx) { resolve(null); return }
+        ctx.drawImage(img, 0, 0)
+        markers.forEach(mk => {
+          const item = legend.find(l => l.id === mk.legendId)
+          if (!item) return
+          const px = (mk.x / 100) * canvas.width
+          const py = (mk.y / 100) * canvas.height
+          const text = item.symbol
+          ctx.font = `bold ${Math.max(14, canvas.width / 40)}px Arial`
+          const metrics = ctx.measureText(text)
+          const pad = 6
+          const bw = metrics.width + pad * 2
+          const bh = Math.max(14, canvas.width / 40) + pad * 2
+          const bx = px - bw / 2
+          const by = py - bh / 2
+          ctx.fillStyle = "rgba(255,255,255,0.92)"
+          ctx.strokeStyle = "#222"
+          ctx.lineWidth = Math.max(1, canvas.width / 400)
+          ctx.beginPath()
+          ctx.roundRect(bx, by, bw, bh, 4)
+          ctx.fill()
+          ctx.stroke()
+          ctx.fillStyle = "#111"
+          ctx.textBaseline = "middle"
+          ctx.textAlign = "center"
+          ctx.fillText(text, px, py)
+        })
+        canvas.toBlob(blob => {
+          if (!blob) { resolve(null); return }
+          blob.arrayBuffer().then(resolve)
+        }, "image/png")
+      }
+      img.onerror = () => resolve(null)
+      img.src = imageUrl
+    })
+  }
+
   const exportToExcel = () => {
     const rows: (string | number)[][] = [
       ["СХЕМА АВАРИЙНОГО УЧАСТКА"],
@@ -314,7 +360,12 @@ export default function EmergencyScheme() {
       ["Степень задымлённости", form.smokeLevel],
       [],
       ["УСЛОВНЫЕ ОБОЗНАЧЕНИЯ"],
-      ...legend.map(l => [l.symbol, l.description]),
+      ...legend.map(l => {
+        const mk = markers.find(m => m.legendId === l.id)
+        return mk
+          ? [l.symbol, l.description, `на схеме (${mk.x.toFixed(0)}%, ${mk.y.toFixed(0)}%)`]
+          : [l.symbol, l.description]
+      }),
       [],
       ["Руководитель горноспасательных работ:", form.headRescue],
       ["Помощник командира отряда:", form.assistantCommander],
@@ -384,13 +435,16 @@ export default function EmergencyScheme() {
 
     if (imageUrl) {
       let arrayBuffer: ArrayBuffer
-      if (imageFile) {
+      const compositeBuffer = await renderImageWithMarkers()
+      if (compositeBuffer) {
+        arrayBuffer = compositeBuffer
+      } else if (imageFile) {
         arrayBuffer = await imageFile.arrayBuffer()
       } else {
         const res = await fetch(imageUrl)
         arrayBuffer = await res.arrayBuffer()
       }
-      const isJpg = imageUrl.includes("jpeg") || imageUrl.includes("jpg") || (imageFile?.type.includes("jpeg"))
+      const isJpg = !compositeBuffer && (imageUrl.includes("jpeg") || imageUrl.includes("jpg") || !!imageFile?.type.includes("jpeg"))
       children.push(
         new Paragraph({ children: [new TextRun({ text: "Схема участка:", bold: true, size: 22 })], spacing: { before: 200, after: 100 } }),
         new Paragraph({
