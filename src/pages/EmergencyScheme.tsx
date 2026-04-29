@@ -15,6 +15,7 @@ interface LegendItem {
   id: string
   symbol: string
   description: string
+  imageUrl?: string
 }
 
 interface MarkerPosition {
@@ -60,9 +61,18 @@ interface SavedScheme {
   markers?: MarkerPosition[]
 }
 
+const LEGEND_IMAGES: { url: string; description: string; symbol: string }[] = [
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/9db6e135-1e27-4383-8295-3630be8e7681.png", description: "Пожар", symbol: "🔥" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/c672fa41-8b71-441b-8a32-bd7fbb233da3.png", description: "Взрыв", symbol: "💥" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/7e41e0cd-276a-4e08-a7d3-ed00f9b927e8.png", description: "Газовыделение", symbol: "☁" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/830959e7-402a-42a0-8b56-df79e9290b9a.png", description: "Самоходное оборудование", symbol: "🚗" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/df8bef2b-8856-4f67-879f-9b97ccd8b935.png", description: "Местонахождение пострадавшего (смертельно)", symbol: "✕" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/c3ca59d8-d4d4-48be-9a62-58e35f43e826.png", description: "Местонахождение пострадавшего (травм.)", symbol: "○" },
+]
+
 const DEFAULT_LEGEND: LegendItem[] = [
   { id: "1", symbol: "🏭", description: "Надшахтное здание" },
-  { id: "2", symbol: "🔥", description: "Пожар" },
+  { id: "2", symbol: "🔥", description: "Пожар", imageUrl: LEGEND_IMAGES[0].url },
   { id: "3", symbol: "ВГК", description: "Стационарный пункт ВГК" },
   { id: "4", symbol: "→", description: "Отделение в движении" },
 ]
@@ -294,7 +304,7 @@ export default function EmergencyScheme() {
   const removeMarker = (legendId: string) => setMarkers(m => m.filter(mk => mk.legendId !== legendId))
 
   const addLegendItem = () => setLegend(l => [...l, { id: Date.now().toString(), symbol: "", description: "" }])
-  const updateLegend = (id: string, field: "symbol" | "description", value: string) =>
+  const updateLegend = (id: string, field: "symbol" | "description" | "imageUrl", value: string) =>
     setLegend(l => l.map(item => item.id === id ? { ...item, [field]: value } : item))
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
 
@@ -783,17 +793,38 @@ export default function EmergencyScheme() {
                     </div>
 
                     <div className="rounded-xl border border-foreground/10 bg-foreground/5 p-5">
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center justify-between mb-3">
                         <p className="font-mono text-xs text-foreground/40 uppercase tracking-widest">Условные обозначения</p>
                         <button onClick={addLegendItem} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors">
                           <Icon name="Plus" size={13} />Добавить
                         </button>
                       </div>
+                      {/* Библиотека иконок */}
+                      <div className="mb-3">
+                        <p className="text-xs text-foreground/40 mb-2">Быстрое добавление из библиотеки:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {LEGEND_IMAGES.map(img => (
+                            <button
+                              key={img.url}
+                              title={img.description}
+                              onClick={() => setLegend(l => [...l, { id: Date.now().toString(), symbol: img.symbol, description: img.description, imageUrl: img.url }])}
+                              className="flex flex-col items-center gap-1 p-1.5 rounded-lg border border-foreground/15 hover:border-primary/50 bg-foreground/5 hover:bg-primary/5 transition-colors"
+                            >
+                              <img src={img.url} alt={img.description} className="w-8 h-8 object-contain" />
+                              <span className="text-[9px] text-foreground/50 max-w-[52px] text-center leading-tight">{img.description}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="flex flex-col gap-2">
                         {legend.map(item => (
                           <div key={item.id} className="flex items-center gap-2">
-                            <input value={item.symbol} onChange={e => updateLegend(item.id, "symbol", e.target.value)} placeholder="Символ"
-                              className="w-20 bg-foreground/5 border border-foreground/15 rounded-lg px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-primary/60 transition-colors text-center" />
+                            <div className="w-10 h-10 shrink-0 flex items-center justify-center border border-foreground/15 rounded-lg bg-foreground/5 overflow-hidden">
+                              {item.imageUrl
+                                ? <img src={item.imageUrl} alt={item.symbol} className="w-8 h-8 object-contain" />
+                                : <span className="text-base">{item.symbol || "?"}</span>
+                              }
+                            </div>
                             <input value={item.description} onChange={e => updateLegend(item.id, "description", e.target.value)} placeholder="Описание"
                               className="flex-1 bg-foreground/5 border border-foreground/15 rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-primary/60 transition-colors" />
                             <button onClick={() => removeLegend(item.id)} className="text-foreground/30 hover:text-foreground/60 transition-colors shrink-0">
@@ -869,7 +900,12 @@ export default function EmergencyScheme() {
                             const isPlacing = placingLegendId === item.id
                             return (
                               <div key={item.id} className="flex items-center gap-1" style={{ fontSize: 11 }}>
-                                <span className="border border-gray-500 rounded px-1 font-bold shrink-0 min-w-[28px] text-center leading-tight">{item.symbol}</span>
+                                <span className="shrink-0" style={{ width: 22, height: 22, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                  {item.imageUrl
+                                    ? <img src={item.imageUrl} alt={item.symbol} style={{ width: 20, height: 20, objectFit: "contain" }} />
+                                    : <span className="border border-gray-500 rounded px-1 font-bold leading-tight">{item.symbol}</span>
+                                  }
+                                </span>
                                 <span className="flex-1 leading-tight">{item.description}</span>
                                 {editingMarkers && (
                                   <button
@@ -920,7 +956,10 @@ export default function EmergencyScheme() {
                           onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
                           onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
                         >
-                          <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 11, lineHeight: 1.3 }}>{item.symbol}</span>
+                          {item.imageUrl
+                            ? <img src={item.imageUrl} alt={item.symbol} className="shadow-md rounded-full" style={{ width: 28, height: 28, objectFit: "contain", background: "white" }} />
+                            : <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 11, lineHeight: 1.3 }}>{item.symbol}</span>
+                          }
                         </div>
                       )
                     })}
