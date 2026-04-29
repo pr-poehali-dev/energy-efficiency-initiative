@@ -182,6 +182,31 @@ export default function EmergencyScheme() {
     setActiveTab("form")
   }
 
+  const duplicateScheme = (s: SavedScheme) => {
+    const id = Date.now().toString()
+    const now = new Date().toISOString()
+    const newPos = s.form.position ? String(Number(s.form.position) + 1 || s.form.position + "_копия") : ""
+    const duplicate: SavedScheme = {
+      id,
+      createdAt: now,
+      updatedAt: now,
+      form: {
+        ...s.form,
+        position: newPos,
+        date: new Date().toLocaleDateString("ru-RU"),
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        accidentDate: new Date().toLocaleDateString("ru-RU"),
+        accidentTime: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+      },
+      legend: s.legend,
+      imageDataUrl: s.imageDataUrl,
+    }
+    const updated = [duplicate, ...schemes]
+    setSchemes(updated)
+    saveSchemes(updated)
+    switchTo(duplicate)
+  }
+
   const deleteScheme = (id: string) => {
     const updated = schemes.filter(s => s.id !== id)
     setSchemes(updated)
@@ -419,12 +444,22 @@ export default function EmergencyScheme() {
                   <span className={`font-sans text-sm font-medium truncate ${isActive ? "text-foreground" : "text-foreground/70"}`}>{pos}</span>
                   <span className="font-mono text-xs text-foreground/40">{date}</span>
                   {type && <span className="text-xs text-accent/80 truncate">{type}</span>}
-                  <button
-                    onClick={e => { e.stopPropagation(); setDeleteConfirm(s.id) }}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity text-foreground/30 hover:text-red-400 p-1 rounded"
-                  >
-                    <Icon name="Trash2" size={12} />
-                  </button>
+                  <div className="absolute right-1 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+                    <button
+                      onClick={e => { e.stopPropagation(); duplicateScheme(s) }}
+                      title="Дублировать"
+                      className="text-foreground/30 hover:text-primary p-1 rounded transition-colors"
+                    >
+                      <Icon name="Copy" size={12} />
+                    </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); setDeleteConfirm(s.id) }}
+                      title="Удалить"
+                      className="text-foreground/30 hover:text-red-400 p-1 rounded transition-colors"
+                    >
+                      <Icon name="Trash2" size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
