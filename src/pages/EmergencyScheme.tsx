@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
@@ -13,6 +13,12 @@ interface LegendItem {
   id: string
   symbol: string
   description: string
+}
+
+interface MarkerPosition {
+  legendId: string
+  x: number
+  y: number
 }
 
 interface FormData {
@@ -49,6 +55,7 @@ interface SavedScheme {
   form: FormData
   legend: LegendItem[]
   imageDataUrl: string | null
+  markers?: MarkerPosition[]
 }
 
 const DEFAULT_LEGEND: LegendItem[] = [
@@ -140,6 +147,10 @@ export default function EmergencyScheme() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [activeTab, setActiveTab] = useState<"form" | "preview">("form")
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [markers, setMarkers] = useState<MarkerPosition[]>(() => loadSchemes()[0]?.markers ?? [])
+  const [draggingMarker, setDraggingMarker] = useState<{ legendId: string; offsetX: number; offsetY: number } | null>(null)
+  const [placingLegendId, setPlacingLegendId] = useState<string | null>(null)
+  const imageContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const set = (field: keyof FormData) => (v: string) => setForm(f => ({ ...f, [field]: v }))
@@ -149,12 +160,12 @@ export default function EmergencyScheme() {
     if (!activeId) return
     const updated = schemes.map(s =>
       s.id === activeId
-        ? { ...s, form, legend, imageDataUrl: imageUrl, updatedAt: new Date().toISOString() }
+        ? { ...s, form, legend, imageDataUrl: imageUrl, markers, updatedAt: new Date().toISOString() }
         : s
     )
     setSchemes(updated)
     saveSchemes(updated)
-  }, [form, legend, imageUrl])
+  }, [form, legend, imageUrl, markers])
 
   const createNew = () => {
     const id = Date.now().toString()
@@ -178,6 +189,7 @@ export default function EmergencyScheme() {
     setForm(scheme.form)
     setLegend(scheme.legend)
     setImageUrl(scheme.imageDataUrl)
+    setMarkers(scheme.markers ?? [])
     setImageFile(null)
     setActiveTab("form")
   }
@@ -220,6 +232,7 @@ export default function EmergencyScheme() {
         setForm(makeDefaultForm())
         setLegend(DEFAULT_LEGEND)
         setImageUrl(null)
+        setMarkers([])
       }
     }
   }
@@ -231,6 +244,50 @@ export default function EmergencyScheme() {
     const dataUrl = await fileToDataUrl(file)
     setImageUrl(dataUrl)
   }
+
+  const getRelativePos = useCallback((clientX: number, clientY: number) => {
+    const el = imageContainerRef.current
+    if (!el) return { x: 50, y: 50 }
+    const rect = el.getBoundingClientRect()
+    return {
+      x: Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100)),
+      y: Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100)),
+    }
+  }, [])
+
+  const handleImageAreaClick = useCallback((e: React.MouseEvent) => {
+    if (!placingLegendId) return
+    const pos = getRelativePos(e.clientX, e.clientY)
+    setMarkers(m => {
+      const without = m.filter(mk => mk.legendId !== placingLegendId)
+      return [...without, { legendId: placingLegendId, x: pos.x, y: pos.y }]
+    })
+    setPlacingLegendId(null)
+  }, [placingLegendId, getRelativePos])
+
+  const handleMarkerMouseDown = useCallback((e: React.MouseEvent, legendId: string) => {
+    e.stopPropagation()
+    const el = imageContainerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const marker = markers.find(m => m.legendId === legendId)
+    if (!marker) return
+    const markerPxX = (marker.x / 100) * rect.width + rect.left
+    const markerPxY = (marker.y / 100) * rect.height + rect.top
+    setDraggingMarker({ legendId, offsetX: e.clientX - markerPxX, offsetY: e.clientY - markerPxY })
+  }, [markers])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!draggingMarker) return
+    const pos = getRelativePos(e.clientX - draggingMarker.offsetX, e.clientY - draggingMarker.offsetY)
+    setMarkers(m => m.map(mk => mk.legendId === draggingMarker.legendId ? { ...mk, x: pos.x, y: pos.y } : mk))
+  }, [draggingMarker, getRelativePos])
+
+  const handleMouseUp = useCallback(() => {
+    setDraggingMarker(null)
+  }, [])
+
+  const removeMarker = (legendId: string) => setMarkers(m => m.filter(mk => mk.legendId !== legendId))
 
   const addLegendItem = () => setLegend(l => [...l, { id: Date.now().toString(), symbol: "", description: "" }])
   const updateLegend = (id: string, field: "symbol" | "description", value: string) =>
@@ -659,24 +716,69 @@ export default function EmergencyScheme() {
                       </div>
                     </div>
                     <div className="flex gap-4 mb-4">
-                      <div className="flex-1 border border-gray-400 rounded overflow-hidden bg-gray-50" style={{ minHeight: 180 }}>
+                      <div
+                        ref={imageContainerRef}
+                        className={`flex-1 border border-gray-400 rounded overflow-hidden bg-gray-50 relative select-none ${placingLegendId ? "cursor-crosshair" : draggingMarker ? "cursor-grabbing" : ""}`}
+                        style={{ minHeight: 180 }}
+                        onClick={handleImageAreaClick}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                      >
                         {imageUrl ? (
-                          <img src={imageUrl} alt="Схема" className="w-full object-contain" style={{ maxHeight: 300 }} />
+                          <img src={imageUrl} alt="Схема" className="w-full object-contain pointer-events-none" style={{ maxHeight: 300 }} />
                         ) : (
                           <div className="flex items-center justify-center h-44 text-gray-400 text-sm">Схема участка не загружена</div>
                         )}
+                        {placingLegendId && (
+                          <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded pointer-events-none flex items-center justify-center">
+                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
+                          </div>
+                        )}
+                        {markers.map(mk => {
+                          const item = legend.find(l => l.id === mk.legendId)
+                          if (!item) return null
+                          return (
+                            <div
+                              key={mk.legendId}
+                              className="absolute flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing"
+                              style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}
+                              onMouseDown={e => handleMarkerMouseDown(e, mk.legendId)}
+                              onDoubleClick={e => { e.stopPropagation(); removeMarker(mk.legendId) }}
+                            >
+                              <span className="bg-white border-2 border-gray-700 rounded px-1 py-0.5 font-bold text-xs shadow-md leading-none">{item.symbol}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                       {legend.length > 0 && (
                         <div className="w-44 shrink-0">
                           <p className="font-bold underline text-sm mb-2">Условные обозначения:</p>
                           <div className="flex flex-col gap-1.5">
-                            {legend.map(item => (
-                              <div key={item.id} className="flex items-start gap-2 text-xs">
-                                <span className="border border-gray-400 rounded px-1 py-0.5 font-bold shrink-0 min-w-[28px] text-center">{item.symbol}</span>
-                                <span>{item.description}</span>
-                              </div>
-                            ))}
+                            {legend.map(item => {
+                              const placed = markers.some(m => m.legendId === item.id)
+                              const isPlacing = placingLegendId === item.id
+                              return (
+                                <div key={item.id} className="flex items-start gap-1 text-xs">
+                                  <span className="border border-gray-400 rounded px-1 py-0.5 font-bold shrink-0 min-w-[28px] text-center">{item.symbol}</span>
+                                  <span className="flex-1">{item.description}</span>
+                                  <button
+                                    title={placed ? "Убрать с карты" : "Разместить на схеме"}
+                                    onClick={() => {
+                                      if (placed) removeMarker(item.id)
+                                      else setPlacingLegendId(isPlacing ? null : item.id)
+                                    }}
+                                    className={`shrink-0 rounded p-0.5 transition-colors ${isPlacing ? "text-blue-600 bg-blue-100" : placed ? "text-red-400 hover:text-red-600" : "text-gray-400 hover:text-gray-700"}`}
+                                  >
+                                    {placed ? "✕" : "📍"}
+                                  </button>
+                                </div>
+                              )
+                            })}
                           </div>
+                          {markers.length > 0 && (
+                            <p className="text-[10px] text-gray-400 mt-2">Двойной клик — убрать маркер</p>
+                          )}
                         </div>
                       )}
                     </div>
