@@ -229,6 +229,15 @@ export default function Index() {
             )}
           </div>
 
+          {/* Схема аварийного участка */}
+          <button
+            onClick={() => navigate("/emergency-scheme")}
+            className="group relative font-sans text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            <Icon name="AlertTriangle" size={13} className="text-accent" />
+            Схема аварии
+          </button>
+
           {/* Справочник */}
           <button
             onClick={() => scrollToSection(4)}
