@@ -168,6 +168,7 @@ export default function EmergencyScheme() {
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
 
   const set = (field: keyof FormData) => (v: string) => setForm(f => ({ ...f, [field]: v }))
 
@@ -311,6 +312,9 @@ export default function EmergencyScheme() {
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
 
   const exportToPdf = async () => {
+    const headerEl = headerRef.current
+    if (!headerEl) return
+
     // A4 landscape: 297 x 210 мм
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
     const mL = 20, mT = 15, mR = 10, mB = 15
@@ -318,84 +322,32 @@ export default function EmergencyScheme() {
     const printW = pageW - mL - mR   // 267мм
     const printH = pageH - mT - mB   // 180мм
 
-    // --- шрифт (встроенный helvetica поддерживает latin, для кириллицы используем windows-1252 fallback)
-    pdf.setFont("helvetica")
+    // --- Шапка через html2canvas (кириллица) ---
+    const prevW = headerEl.style.width
+    headerEl.style.width = "1000px"
+    await new Promise(r => requestAnimationFrame(r))
+    const headerCanvas = await html2canvas(headerEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 1000 })
+    headerEl.style.width = prevW
 
-    // --- Заголовок ---
-    pdf.setFontSize(11)
-    pdf.setFont("helvetica", "bold")
-    const title = `Схема аварийного участка - позиция  ${form.position || "-"}     ${form.date}     ${form.time}  (${form.timezone})`
-    pdf.text(title, mL + printW / 2, mT + 6, { align: "center" })
+    const headerImgData = headerCanvas.toDataURL("image/png")
+    // Высота шапки в мм пропорционально ширине printW
+    const headerH = (headerCanvas.height / headerCanvas.width) * printW
+    pdf.addImage(headerImgData, "PNG", mL, mT, printW, headerH)
 
-    // --- Строка: наименование объекта ---
-    let curY = mT + 11
-    pdf.setFontSize(9)
-    pdf.setFont("helvetica", "bold")
-    pdf.text("Наим. обслуживаемого объекта:", mL, curY)
-    pdf.setFont("helvetica", "normal")
-    pdf.text(form.objectName || "-", mL + 58, curY)
-
-    // --- Три колонки: левая инфо | газы | (правая — обозначения будут рядом с картинкой) ---
-    curY += 4
-    const col1X = mL
-    const col2X = mL + 88
-    const col3X = mL + 167
-
-    const boldLabel = (label: string, value: string, x: number, y: number) => {
-      pdf.setFontSize(8)
-      pdf.setFont("helvetica", "bold")
-      pdf.text(label, x, y)
-      pdf.setFont("helvetica", "normal")
-      const labelW = pdf.getTextWidth(label)
-      pdf.text(value || "-", x + labelW + 1, y)
-    }
-
-    boldLabel("Вид аварии:", form.accidentType, col1X, curY)
-    curY += 3.8
-    boldLabel("Дата/время аварии:", `${form.accidentDate}  ${form.accidentTime}  (${form.timezone})`, col1X, curY)
-    curY += 3.8
-    boldLabel("Место аварии:", form.accidentLocation || "-", col1X, curY)
-    curY += 3.8
-    boldLabel("Кол-во воздуха:", form.airVolume ? `${form.airVolume} м3/с` : "-", col1X, curY)
-    curY += 3.8
-    boldLabel("Сечение выработки:", form.sectionArea ? `${form.sectionArea} м2` : "-", col1X, curY)
-    curY += 3.8
-    boldLabel("Телефон КП:", form.phoneCP || "-", col1X, curY)
-
-    // Газы — центральная колонка
-    let gasY = mT + 15
-    pdf.setFontSize(8)
-    pdf.setFont("helvetica", "bold")
-    pdf.text("Состав рудничной атмосферы:", col2X, gasY)
-    pdf.setLineWidth(0.2)
-    pdf.line(col2X, gasY + 0.5, col2X + 55, gasY + 0.5)
-    gasY += 4
-    const gases = [["CO", form.co], ["CO2", form.co2], ["SO2", form.so2], ["O2", form.o2], ["CH4", form.ch4], ["NO-NO2", form.nono2], ["t", form.temperature], ["Задымл.", form.smokeLevel]].filter(([, v]) => v)
-    const gasColW = 27
-    gases.forEach(([l, v], i) => {
-      const gx = col2X + (i % 2) * gasColW
-      const gy = gasY + Math.floor(i / 2) * 3.8
-      pdf.setFont("helvetica", "bold")
-      pdf.text(`${l}:`, gx, gy)
-      pdf.setFont("helvetica", "normal")
-      pdf.text(v, gx + pdf.getTextWidth(`${l}:`) + 1, gy)
-    })
-
-    // Разделительная линия перед картинкой
-    const schemeTopY = mT + 42
+    // Разделитель
+    const schemeTopY = mT + headerH + 1
+    pdf.setDrawColor(180)
     pdf.setLineWidth(0.3)
-    pdf.line(mL, schemeTopY - 1, mL + printW, schemeTopY - 1)
+    pdf.line(mL, schemeTopY, mL + printW, schemeTopY)
 
     // --- Зона картинки + условных обозначений ---
-    // Высота зоны = до подписей (оставляем 10мм на подписи снизу)
-    const signaturesH = 10
+    const signaturesH = 11
     const schemeH = mT + printH - schemeTopY - signaturesH
-    const legendW = legend.length > 0 ? 45 : 0   // ширина колонки обозначений мм
+    const legendW = legend.length > 0 ? 50 : 0
     const imageZoneW = printW - legendW
 
     // Картинка схемы
     if (imageUrl) {
-      // Рисуем картинку с маркерами через canvas
       const compositeBuffer = await renderImageWithMarkers()
       let imgDataUrl = imageUrl
       if (compositeBuffer) {
@@ -404,77 +356,70 @@ export default function EmergencyScheme() {
       } else if (imageFile) {
         imgDataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(imageFile) })
       }
-
-      // Вписываем картинку в зону с сохранением пропорций
       const tempImg = new Image()
       await new Promise<void>(res => { tempImg.onload = () => res(); tempImg.src = imgDataUrl })
       const imgRatio = tempImg.naturalWidth / tempImg.naturalHeight
       let iw = imageZoneW
       let ih = iw / imgRatio
       if (ih > schemeH) { ih = schemeH; iw = ih * imgRatio }
-      const ix = mL
-      const iy = schemeTopY
-
       const fmt = imgDataUrl.startsWith("data:image/jpeg") || imgDataUrl.startsWith("data:image/jpg") ? "JPEG" : "PNG"
-      pdf.addImage(imgDataUrl, fmt, ix, iy, iw, ih)
-    } else {
-      pdf.setFontSize(8)
-      pdf.setFont("helvetica", "normal")
-      pdf.setTextColor(150)
-      pdf.text("Схема участка не загружена", mL + imageZoneW / 2, schemeTopY + schemeH / 2, { align: "center" })
-      pdf.setTextColor(0)
+      pdf.addImage(imgDataUrl, fmt, mL, schemeTopY + 1, iw, ih)
     }
 
-    // Условные обозначения — правая колонка
+    // Условные обозначения — правая колонка через html2canvas
     if (legend.length > 0) {
-      const legX = mL + imageZoneW + 2
-      let legY = schemeTopY + 4
-      pdf.setFontSize(8)
-      pdf.setFont("helvetica", "bold")
-      pdf.text("Усл. обозначения:", legX, legY)
-      pdf.setLineWidth(0.2)
-      pdf.line(legX, legY + 0.5, legX + legendW - 4, legY + 0.5)
-      legY += 4
-      pdf.setFont("helvetica", "normal")
-      pdf.setFontSize(7.5)
-      legend.forEach(item => {
-        if (legY > schemeTopY + schemeH + 4) return
-        pdf.setFont("helvetica", "bold")
-        pdf.text(item.symbol || "?", legX, legY)
-        pdf.setFont("helvetica", "normal")
-        const sym = item.symbol || "?"
-        const descLines = pdf.splitTextToSize(item.description, legendW - pdf.getTextWidth(sym) - 4)
-        pdf.text(descLines, legX + pdf.getTextWidth(sym) + 2, legY)
-        legY += Math.max(4, descLines.length * 3.5)
-      })
-
       // Вертикальный разделитель
+      pdf.setDrawColor(180)
       pdf.setLineWidth(0.3)
-      pdf.line(mL + imageZoneW, schemeTopY - 1, mL + imageZoneW, mT + printH - signaturesH)
+      pdf.line(mL + imageZoneW, schemeTopY, mL + imageZoneW, mT + printH - signaturesH)
+
+      // Рендерим обозначения как html-блок
+      const legDiv = document.createElement("div")
+      legDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:300px;background:white;padding:6px;font-family:Times New Roman,serif;font-size:18px;`
+      legDiv.innerHTML = `<p style="font-weight:bold;text-decoration:underline;margin:0 0 6px">Условные обозначения:</p>` +
+        legend.map(item => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          ${item.imageUrl
+            ? `<img src="${item.imageUrl}" style="width:20px;height:20px;object-fit:contain;flex-shrink:0"/>`
+            : `<span style="border:1px solid #555;border-radius:2px;padding:0 3px;font-weight:bold;font-size:14px;flex-shrink:0">${item.symbol}</span>`
+          }
+          <span style="line-height:1.2">${item.description}</span>
+        </div>`).join("")
+      document.body.appendChild(legDiv)
+      await new Promise(r => requestAnimationFrame(r))
+      const legCanvas = await html2canvas(legDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 300 })
+      document.body.removeChild(legDiv)
+
+      const legImgData = legCanvas.toDataURL("image/png")
+      const legH = Math.min(schemeH, (legCanvas.height / legCanvas.width) * legendW)
+      pdf.addImage(legImgData, "PNG", mL + imageZoneW + 1, schemeTopY + 1, legendW - 1, legH)
     }
 
     // Горизонтальный разделитель перед подписями
     const sigY = mT + printH - signaturesH
+    pdf.setDrawColor(180)
     pdf.setLineWidth(0.3)
     pdf.line(mL, sigY, mL + printW, sigY)
 
-    // Подписи
-    pdf.setFontSize(8.5)
-    pdf.setFont("helvetica", "bold")
-    pdf.text("Руководитель горноспасательных работ:", mL, sigY + 5)
-    pdf.setFont("helvetica", "normal")
-    pdf.text(form.headRescue || "_____________", mL + 75, sigY + 5)
+    // Подписи через html2canvas
+    const sigDiv = document.createElement("div")
+    sigDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:1400px;background:white;padding:4px 8px;font-family:Times New Roman,serif;font-size:20px;display:flex;justify-content:space-between;align-items:center;`
+    sigDiv.innerHTML = `
+      <span><b>Руководитель горноспасательных работ:</b>&nbsp;<span style="border-bottom:1px solid #555;display:inline-block;min-width:140px">${form.headRescue || ""}</span></span>
+      <span>Помощник командира отряда&nbsp;<span style="border-bottom:1px solid #555;display:inline-block;min-width:120px">${form.assistantCommander || ""}</span>&nbsp;/${form.commanderName || ""}/</span>
+    `
+    document.body.appendChild(sigDiv)
+    await new Promise(r => requestAnimationFrame(r))
+    const sigCanvas = await html2canvas(sigDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 1400 })
+    document.body.removeChild(sigDiv)
 
-    pdf.setFont("helvetica", "bold")
-    pdf.text("Пом. командира отряда:", col3X, sigY + 5)
-    pdf.setFont("helvetica", "normal")
-    pdf.text(`${form.assistantCommander || "___________"}  /${form.commanderName || ""}/`, col3X + 42, sigY + 5)
+    const sigImgData = sigCanvas.toDataURL("image/png")
+    const sigImgH = (sigCanvas.height / sigCanvas.width) * printW
+    pdf.addImage(sigImgData, "PNG", mL, sigY + 1, printW, sigImgH)
 
-    // --- Рамка ГОСТ (рисуется поверх всего, но не перекрывает контент) ---
+    // --- Рамка ГОСТ ---
     pdf.setDrawColor(0)
     pdf.setLineWidth(0.5)
     pdf.rect(mL, mT, printW, printH)
-    // Жирная линия слева (поле для подшивки)
     pdf.setLineWidth(1.2)
     pdf.line(mL, mT, mL, mT + printH)
 
@@ -1020,6 +965,8 @@ export default function EmergencyScheme() {
                 <div className="overflow-x-auto">
                 <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 12, padding: "16px 10px 16px 24px", minWidth: 900, width: 900 }}>
 
+                  {/* Шапка (снимается через html2canvas для PDF) */}
+                  <div ref={headerRef} style={{ background: "white" }}>
                   {/* Заголовок */}
                   <p className="text-center font-bold mb-2" style={{ fontSize: 13 }}>
                     Схема аварийного участка — позиция&nbsp;&nbsp;{form.position || "—"}
@@ -1057,6 +1004,7 @@ export default function EmergencyScheme() {
                       )}
                     </div>
                   </div>
+                  </div>{/* /headerRef */}
 
                   {/* Разделитель */}
                   <div style={{ borderTop: "1px solid #ccc", marginBottom: 4 }} />
