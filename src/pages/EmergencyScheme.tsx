@@ -499,38 +499,58 @@ export default function EmergencyScheme() {
       new Paragraph({ spacing: { after: 300 } }),
     ]
 
-    if (imageUrl) {
-      let arrayBuffer: ArrayBuffer
-      const compositeBuffer = await renderImageWithMarkers()
-      if (compositeBuffer) {
-        arrayBuffer = compositeBuffer
-      } else if (imageFile) {
-        arrayBuffer = await imageFile.arrayBuffer()
+    // Картинка + условные обозначения рядом в одной таблице
+    if (imageUrl || legend.length > 0) {
+      let imageCell: TableCell
+      if (imageUrl) {
+        let arrayBuffer: ArrayBuffer
+        const compositeBuffer = await renderImageWithMarkers()
+        if (compositeBuffer) {
+          arrayBuffer = compositeBuffer
+        } else if (imageFile) {
+          arrayBuffer = await imageFile.arrayBuffer()
+        } else {
+          const res = await fetch(imageUrl)
+          arrayBuffer = await res.arrayBuffer()
+        }
+        const isJpg = !compositeBuffer && (imageUrl.includes("jpeg") || imageUrl.includes("jpg") || !!imageFile?.type.includes("jpeg"))
+        imageCell = new TableCell({
+          borders: noBorder,
+          width: { size: legend.length > 0 ? 72 : 100, type: WidthType.PERCENTAGE },
+          children: [
+            new Paragraph({
+              children: [new ImageRun({ data: arrayBuffer, transformation: { width: 460, height: 310 }, type: isJpg ? "jpg" : "png" })],
+            }),
+          ],
+        })
       } else {
-        const res = await fetch(imageUrl)
-        arrayBuffer = await res.arrayBuffer()
+        imageCell = new TableCell({ borders: noBorder, width: { size: 72, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [] })] })
       }
-      const isJpg = !compositeBuffer && (imageUrl.includes("jpeg") || imageUrl.includes("jpg") || !!imageFile?.type.includes("jpeg"))
-      children.push(
-        new Paragraph({ children: [new TextRun({ text: "Схема участка:", bold: true, size: 22 })], spacing: { before: 200, after: 100 } }),
-        new Paragraph({
-          children: [new ImageRun({ data: arrayBuffer, transformation: { width: 600, height: 380 }, type: isJpg ? "jpg" : "png" })],
-          spacing: { after: 300 },
-        }),
-      )
-    }
 
-    if (legend.length > 0) {
+      const legendRows = legend.map(l => new TableRow({ children: [
+        new TableCell({ borders: noBorder, width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.symbol, size: 18, bold: true })] })] }),
+        new TableCell({ borders: noBorder, width: { size: 75, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.description, size: 18 })] })] }),
+      ]}))
+
+      const legendCell = new TableCell({
+        borders: {
+          top: noBorder.top, bottom: noBorder.bottom, right: noBorder.right,
+          left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+        },
+        width: { size: 28, type: WidthType.PERCENTAGE },
+        children: legend.length > 0 ? [
+          new Paragraph({ children: [new TextRun({ text: "Условные обозначения:", bold: true, size: 20, underline: {} })], spacing: { after: 100 } }),
+          new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: legendRows }),
+        ] : [new Paragraph({ children: [] })],
+      })
+
       children.push(
-        new Paragraph({ children: [new TextRun({ text: "Условные обозначения:", bold: true, size: 22, underline: {} })], spacing: { before: 200, after: 100 } }),
+        new Paragraph({ spacing: { after: 100 } }),
         new Table({
-          width: { size: 50, type: WidthType.PERCENTAGE },
-          rows: legend.map(l => new TableRow({ children: [
-            new TableCell({ borders: noBorder, width: { size: 20, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.symbol, size: 20 })] })] }),
-            new TableCell({ borders: noBorder, width: { size: 80, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.description, size: 20 })] })] }),
-          ]})),
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [new TableRow({ children: legend.length > 0 ? [imageCell, legendCell] : [imageCell] })],
         }),
-        new Paragraph({ spacing: { after: 400 } }),
+        new Paragraph({ spacing: { after: 200 } }),
       )
     }
 
