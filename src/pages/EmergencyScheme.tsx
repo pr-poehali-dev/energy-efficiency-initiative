@@ -312,111 +312,47 @@ export default function EmergencyScheme() {
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
 
   const exportToPdf = async () => {
-    const headerEl = headerRef.current
-    if (!headerEl) return
+    const el = previewRef.current
+    if (!el) return
 
-    // A4 landscape: 297 x 210 мм
+    // Фиксируем ширину — превью уже имеет правильную раскладку (обозначения справа от картинки)
+    const prevWidth = el.style.width
+    const prevMinWidth = el.style.minWidth
+    el.style.width = "1100px"
+    el.style.minWidth = "1100px"
+    await new Promise(r => requestAnimationFrame(r))
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      width: 1100,
+      height: el.scrollHeight,
+    })
+
+    el.style.width = prevWidth
+    el.style.minWidth = prevMinWidth
+
+    const imgData = canvas.toDataURL("image/png")
+
+    // A4 landscape: 297 x 210 мм, поля: L=20, T=15, R=10, B=15
     const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
     const mL = 20, mT = 15, mR = 10, mB = 15
     const pageW = 297, pageH = 210
     const printW = pageW - mL - mR   // 267мм
     const printH = pageH - mT - mB   // 180мм
 
-    // --- Шапка через html2canvas (кириллица) ---
-    const prevW = headerEl.style.width
-    headerEl.style.width = "1000px"
-    await new Promise(r => requestAnimationFrame(r))
-    const headerCanvas = await html2canvas(headerEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 1000 })
-    headerEl.style.width = prevW
+    // Вписываем скриншот в зону печати (сохраняем пропорции, не выходим за рамку)
+    const ratio = canvas.width / canvas.height
+    let w = printW
+    let h = w / ratio
+    if (h > printH) { h = printH; w = h * ratio }
+    const x = mL + (printW - w) / 2
+    const y = mT + (printH - h) / 2
 
-    const headerImgData = headerCanvas.toDataURL("image/png")
-    // Высота шапки в мм пропорционально ширине printW
-    const headerH = (headerCanvas.height / headerCanvas.width) * printW
-    pdf.addImage(headerImgData, "PNG", mL, mT, printW, headerH)
+    pdf.addImage(imgData, "PNG", x, y, w, h)
 
-    // Разделитель
-    const schemeTopY = mT + headerH + 1
-    pdf.setDrawColor(180)
-    pdf.setLineWidth(0.3)
-    pdf.line(mL, schemeTopY, mL + printW, schemeTopY)
-
-    // --- Зона картинки + условных обозначений ---
-    const signaturesH = 11
-    const schemeH = mT + printH - schemeTopY - signaturesH
-    const legendW = legend.length > 0 ? 50 : 0
-    const imageZoneW = printW - legendW
-
-    // Картинка схемы
-    if (imageUrl) {
-      const compositeBuffer = await renderImageWithMarkers()
-      let imgDataUrl = imageUrl
-      if (compositeBuffer) {
-        const blob = new Blob([compositeBuffer], { type: "image/png" })
-        imgDataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(blob) })
-      } else if (imageFile) {
-        imgDataUrl = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(imageFile) })
-      }
-      const tempImg = new Image()
-      await new Promise<void>(res => { tempImg.onload = () => res(); tempImg.src = imgDataUrl })
-      const imgRatio = tempImg.naturalWidth / tempImg.naturalHeight
-      let iw = imageZoneW
-      let ih = iw / imgRatio
-      if (ih > schemeH) { ih = schemeH; iw = ih * imgRatio }
-      const fmt = imgDataUrl.startsWith("data:image/jpeg") || imgDataUrl.startsWith("data:image/jpg") ? "JPEG" : "PNG"
-      pdf.addImage(imgDataUrl, fmt, mL, schemeTopY + 1, iw, ih)
-    }
-
-    // Условные обозначения — правая колонка через html2canvas
-    if (legend.length > 0) {
-      // Вертикальный разделитель
-      pdf.setDrawColor(180)
-      pdf.setLineWidth(0.3)
-      pdf.line(mL + imageZoneW, schemeTopY, mL + imageZoneW, mT + printH - signaturesH)
-
-      // Рендерим обозначения как html-блок
-      const legDiv = document.createElement("div")
-      legDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:300px;background:white;padding:6px;font-family:Times New Roman,serif;font-size:18px;`
-      legDiv.innerHTML = `<p style="font-weight:bold;text-decoration:underline;margin:0 0 6px">Условные обозначения:</p>` +
-        legend.map(item => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          ${item.imageUrl
-            ? `<img src="${item.imageUrl}" style="width:20px;height:20px;object-fit:contain;flex-shrink:0"/>`
-            : `<span style="border:1px solid #555;border-radius:2px;padding:0 3px;font-weight:bold;font-size:14px;flex-shrink:0">${item.symbol}</span>`
-          }
-          <span style="line-height:1.2">${item.description}</span>
-        </div>`).join("")
-      document.body.appendChild(legDiv)
-      await new Promise(r => requestAnimationFrame(r))
-      const legCanvas = await html2canvas(legDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 300 })
-      document.body.removeChild(legDiv)
-
-      const legImgData = legCanvas.toDataURL("image/png")
-      const legH = Math.min(schemeH, (legCanvas.height / legCanvas.width) * legendW)
-      pdf.addImage(legImgData, "PNG", mL + imageZoneW + 1, schemeTopY + 1, legendW - 1, legH)
-    }
-
-    // Горизонтальный разделитель перед подписями
-    const sigY = mT + printH - signaturesH
-    pdf.setDrawColor(180)
-    pdf.setLineWidth(0.3)
-    pdf.line(mL, sigY, mL + printW, sigY)
-
-    // Подписи через html2canvas
-    const sigDiv = document.createElement("div")
-    sigDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:1400px;background:white;padding:4px 8px;font-family:Times New Roman,serif;font-size:20px;display:flex;justify-content:space-between;align-items:center;`
-    sigDiv.innerHTML = `
-      <span><b>Руководитель горноспасательных работ:</b>&nbsp;<span style="border-bottom:1px solid #555;display:inline-block;min-width:140px">${form.headRescue || ""}</span></span>
-      <span>Помощник командира отряда&nbsp;<span style="border-bottom:1px solid #555;display:inline-block;min-width:120px">${form.assistantCommander || ""}</span>&nbsp;/${form.commanderName || ""}/</span>
-    `
-    document.body.appendChild(sigDiv)
-    await new Promise(r => requestAnimationFrame(r))
-    const sigCanvas = await html2canvas(sigDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 1400 })
-    document.body.removeChild(sigDiv)
-
-    const sigImgData = sigCanvas.toDataURL("image/png")
-    const sigImgH = (sigCanvas.height / sigCanvas.width) * printW
-    pdf.addImage(sigImgData, "PNG", mL, sigY + 1, printW, sigImgH)
-
-    // --- Рамка ГОСТ ---
+    // Рамка ГОСТ поверх (рисуется последней, не перекрывает контент т.к. внутри поля)
     pdf.setDrawColor(0)
     pdf.setLineWidth(0.5)
     pdf.rect(mL, mT, printW, printH)
