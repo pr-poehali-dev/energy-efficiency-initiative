@@ -5,6 +5,8 @@ import { GrainOverlay } from "@/components/grain-overlay"
 import Icon from "@/components/ui/icon"
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from "docx"
 import * as XLSX from "xlsx"
+import html2canvas from "html2canvas"
+import jsPDF from "jspdf"
 
 const ACCIDENT_TYPES = ["Пожар", "Взрыв", "Загазованность", "Обрушение", "Затопление", "Прочее"]
 const STORAGE_KEY = "emergency_schemes_v1"
@@ -152,6 +154,7 @@ export default function EmergencyScheme() {
   const [placingLegendId, setPlacingLegendId] = useState<string | null>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   const set = (field: keyof FormData) => (v: string) => setForm(f => ({ ...f, [field]: v }))
 
@@ -293,6 +296,22 @@ export default function EmergencyScheme() {
   const updateLegend = (id: string, field: "symbol" | "description", value: string) =>
     setLegend(l => l.map(item => item.id === id ? { ...item, [field]: value } : item))
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
+
+  const exportToPdf = async () => {
+    const el = previewRef.current
+    if (!el) return
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" })
+    const imgData = canvas.toDataURL("image/png")
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+    const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
+    const ratio = canvas.width / canvas.height
+    let w = pageW - 10
+    let h = w / ratio
+    if (h > pageH - 10) { h = pageH - 10; w = h * ratio }
+    pdf.addImage(imgData, "PNG", (pageW - w) / 2, (pageH - h) / 2, w, h)
+    pdf.save(`Схема_аварийного_участка_поз${form.position || "—"}.pdf`)
+  }
 
   const renderImageWithMarkers = (): Promise<ArrayBuffer | null> => {
     return new Promise(resolve => {
@@ -519,6 +538,13 @@ export default function EmergencyScheme() {
             <Icon name="FileText" size={15} />
             <span className="hidden sm:inline">Word</span>
           </button>
+          <button
+            onClick={() => { if (activeTab !== "preview") { setActiveTab("preview"); setTimeout(exportToPdf, 300) } else { exportToPdf() } }}
+            className="flex items-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
+          >
+            <Icon name="FileDown" size={15} />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
         </div>
       </nav>
 
@@ -735,7 +761,7 @@ export default function EmergencyScheme() {
 
               {/* ПРЕДПРОСМОТР */}
               {activeTab === "preview" && (
-                <div className="bg-white text-black rounded-xl overflow-hidden shadow-2xl" style={{ fontFamily: "Times New Roman, serif" }}>
+                <div ref={previewRef} className="bg-white text-black rounded-xl overflow-hidden shadow-2xl" style={{ fontFamily: "Times New Roman, serif" }}>
                   <div className="px-8 pt-6 pb-2 text-center border-b border-gray-300">
                     <p className="text-base font-bold">
                       Схема аварийного участка — позиция&nbsp;&nbsp;{form.position || "—"}
