@@ -820,113 +820,116 @@ export default function EmergencyScheme() {
                     {editingMarkers ? "Готово" : "Разместить маркеры"}
                   </button>
                 </div>
-                <div ref={previewRef} className="bg-white text-black rounded-xl overflow-hidden shadow-2xl" style={{ fontFamily: "Times New Roman, serif" }}>
-                  <div className="px-8 pt-6 pb-2 text-center border-b border-gray-300">
-                    <p className="text-base font-bold">
-                      Схема аварийного участка — позиция&nbsp;&nbsp;{form.position || "—"}
-                      &nbsp;&nbsp;&nbsp;&nbsp;{form.date}&nbsp;&nbsp;&nbsp;&nbsp;{form.time}&nbsp;&nbsp;&nbsp;&nbsp;({form.timezone})
-                    </p>
+                <div ref={previewRef} className="bg-white text-black shadow-2xl" style={{ fontFamily: "Times New Roman, serif", fontSize: 13, padding: "20px 10px 20px 30px" }}>
+
+                  {/* Заголовок */}
+                  <p className="text-center font-bold mb-2" style={{ fontSize: 15 }}>
+                    Схема аварийного участка - позиция&nbsp;&nbsp;&nbsp;{form.position || "—"}
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.date}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{form.time}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;({form.timezone})
+                  </p>
+
+                  {/* Наименование объекта */}
+                  <div className="flex gap-2 mb-1" style={{ fontSize: 13 }}>
+                    <span className="font-bold whitespace-nowrap">Наименование обслуживаемого объекта:</span>
+                    <span>{form.objectName || "—"}</span>
                   </div>
-                  <div className="px-8 py-4">
-                    <table className="w-full text-sm mb-2" style={{ borderCollapse: "collapse" }}>
-                      <tbody>
-                        <tr><td className="py-0.5 font-bold pr-4 whitespace-nowrap">Наименование обслуживаемого объекта:</td><td>{form.objectName || "—"}</td></tr>
-                        <tr><td className="py-0.5 font-bold pr-4">Вид аварии:</td><td>{form.accidentType}</td></tr>
-                        <tr><td className="py-0.5 font-bold pr-4">Дата и время аварии:</td><td>{form.accidentDate}&nbsp;&nbsp;{form.accidentTime}&nbsp;&nbsp;({form.timezone})</td></tr>
-                        <tr><td className="py-0.5 font-bold pr-4">Место аварии:</td><td className="italic">{form.accidentLocation || "—"}</td></tr>
-                      </tbody>
-                    </table>
-                    <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                      <table style={{ borderCollapse: "collapse" }}>
-                        <tbody>
-                          <tr><td className="py-0.5 font-bold pr-2">Количество воздуха:</td><td>{form.airVolume} м³/с</td></tr>
-                          <tr><td className="py-0.5 font-bold pr-2">Сечение выработки:</td><td>{form.sectionArea} м²</td></tr>
-                          <tr><td className="py-0.5 font-bold pr-2">Телефон КП:</td><td>{form.phoneCP || "—"}</td></tr>
-                        </tbody>
-                      </table>
-                      <div>
-                        <p className="font-bold underline mb-1">Состав рудничной атмосферы:</p>
-                        <div className="grid grid-cols-2 gap-x-4 text-xs">
-                          {[["CO", form.co], ["CO₂", form.co2], ["SO₂", form.so2], ["O₂", form.o2], ["CH₄", form.ch4], ["NO-NO₂", form.nono2], ["t°", form.temperature]].filter(([, v]) => v).map(([l, v]) => (
-                            <span key={l}><b>{l}</b>- {v}</span>
-                          ))}
-                        </div>
-                        {form.smokeLevel && <p className="text-xs mt-1"><b>Задымлённость</b> — {form.smokeLevel}</p>}
-                      </div>
+
+                  {/* Три колонки: левая + газы + легенда */}
+                  <div className="flex gap-0 mb-1" style={{ fontSize: 12 }}>
+                    {/* Левая колонка */}
+                    <div style={{ width: "34%" }}>
+                      <div className="flex gap-1"><span className="font-bold">Вид аварии:</span><span>{form.accidentType}</span></div>
+                      <div className="flex gap-1"><span className="font-bold">Дата и время аварии:</span><span>{form.accidentDate}&nbsp;&nbsp;{form.accidentTime}&nbsp;&nbsp;({form.timezone})</span></div>
+                      <div className="flex gap-1"><span className="font-bold">Место аварии:</span><span className="italic">{form.accidentLocation || "—"}</span></div>
+                      <div className="flex gap-1"><span className="font-bold whitespace-nowrap">Количество воздуха в аварийной выработке:</span><span>{form.airVolume && <>{form.airVolume}&nbsp;м³/с</>}</span></div>
+                      <div className="flex gap-1"><span className="font-bold">Сечение аварийной выработки:</span><span>{form.sectionArea && <>{form.sectionArea}&nbsp;м²</>}</span></div>
+                      <div className="flex gap-1"><span className="font-bold">Телефон КП:</span><span>{form.phoneCP || "—"}</span></div>
                     </div>
-                    <div className="flex gap-4 mb-4">
-                      <div
-                        ref={imageContainerRef}
-                        className={`flex-1 border border-gray-400 rounded overflow-hidden bg-gray-50 relative select-none ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
-                        style={{ minHeight: 180 }}
-                        onClick={editingMarkers ? handleImageAreaClick : undefined}
-                        onMouseMove={editingMarkers ? handleMouseMove : undefined}
-                        onMouseUp={editingMarkers ? handleMouseUp : undefined}
-                        onMouseLeave={editingMarkers ? handleMouseUp : undefined}
-                      >
-                        {imageUrl ? (
-                          <img src={imageUrl} alt="Схема" className="block mx-auto pointer-events-none" style={{ maxWidth: "100%", maxHeight: 300, width: "auto", height: "auto" }} />
-                        ) : (
-                          <div className="flex items-center justify-center h-44 text-gray-400 text-sm">Схема участка не загружена</div>
-                        )}
-                        {editingMarkers && placingLegendId && (
-                          <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded pointer-events-none flex items-center justify-center">
-                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
-                          </div>
-                        )}
-                        {markers.map(mk => {
-                          const item = legend.find(l => l.id === mk.legendId)
-                          if (!item) return null
-                          return (
-                            <div
-                              key={mk.legendId}
-                              className={`absolute flex flex-col items-center gap-0.5 ${editingMarkers ? "cursor-grab active:cursor-grabbing" : ""}`}
-                              style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}
-                              onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
-                              onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
-                            >
-                              <span className="bg-white border-2 border-gray-700 rounded px-1 py-0.5 font-bold text-xs shadow-md leading-none">{item.symbol}</span>
-                            </div>
-                          )
-                        })}
+
+                    {/* Центр: состав атмосферы */}
+                    <div style={{ width: "42%" }} className="pl-2">
+                      <p className="font-bold underline mb-0.5">Состав рудничной атмосферы:</p>
+                      <div className="grid grid-cols-3 gap-x-3" style={{ fontSize: 11 }}>
+                        {[["CO", form.co], ["CO2", form.co2], ["SO2", form.so2], ["O2", form.o2], ["CH4", form.ch4], ["NO-NO2", form.nono2], ["t°", form.temperature], ["SO2", form.so2_2]].filter(([, v]) => v).map(([l, v]) => (
+                          <span key={l}><b>{l}</b>- {v}</span>
+                        ))}
                       </div>
-                      {legend.length > 0 && (
-                        <div className="w-44 shrink-0">
-                          <p className="font-bold underline text-sm mb-2">Условные обозначения:</p>
-                          <div className="flex flex-col gap-1.5">
-                            {legend.map(item => {
-                              const placed = markers.some(m => m.legendId === item.id)
-                              const isPlacing = placingLegendId === item.id
-                              return (
-                                <div key={item.id} className="flex items-start gap-1 text-xs">
-                                  <span className="border border-gray-400 rounded px-1 py-0.5 font-bold shrink-0 min-w-[28px] text-center">{item.symbol}</span>
-                                  <span className="flex-1">{item.description}</span>
-                                  {editingMarkers && (
-                                    <button
-                                      title={placed ? "Убрать с карты" : "Разместить на схеме"}
-                                      onClick={() => {
-                                        if (placed) removeMarker(item.id)
-                                        else setPlacingLegendId(isPlacing ? null : item.id)
-                                      }}
-                                      className={`shrink-0 rounded p-0.5 transition-colors ${isPlacing ? "text-blue-600 bg-blue-100" : placed ? "text-red-400 hover:text-red-600" : "text-gray-400 hover:text-gray-700"}`}
-                                    >
-                                      {placed ? "✕" : "📍"}
-                                    </button>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-                          {editingMarkers && markers.length > 0 && (
-                            <p className="text-[10px] text-gray-400 mt-2">Двойной клик — убрать маркер</p>
-                          )}
-                        </div>
+                      {form.smokeLevel && (
+                        <p style={{ fontSize: 11 }} className="mt-0.5"><b>Степень задымлённости</b>- {form.smokeLevel}</p>
                       )}
                     </div>
-                    <div className="border-t border-gray-300 pt-3 flex justify-between text-sm">
-                      <span>Руководитель горноспасательных работ:&nbsp;<span className="border-b border-gray-400 inline-block min-w-[120px]">{form.headRescue}</span></span>
-                      <span>Помощник командира отряда&nbsp;<span className="border-b border-gray-400 inline-block min-w-[100px]">{form.assistantCommander}</span>&nbsp;/{form.commanderName}/</span>
-                    </div>
+
+                    {/* Правая колонка: условные обозначения */}
+                    {legend.length > 0 && (
+                      <div style={{ width: "24%" }} className="pl-2 border-l border-gray-300">
+                        <p className="font-bold underline mb-1" style={{ fontSize: 12 }}>Условные обозначения:</p>
+                        <div className="flex flex-col gap-1">
+                          {legend.map(item => {
+                            const placed = markers.some(m => m.legendId === item.id)
+                            const isPlacing = placingLegendId === item.id
+                            return (
+                              <div key={item.id} className="flex items-center gap-1" style={{ fontSize: 11 }}>
+                                <span className="border border-gray-500 rounded px-1 font-bold shrink-0 min-w-[28px] text-center leading-tight">{item.symbol}</span>
+                                <span className="flex-1 leading-tight">{item.description}</span>
+                                {editingMarkers && (
+                                  <button
+                                    title={placed ? "Убрать" : "Разместить"}
+                                    onClick={() => { if (placed) removeMarker(item.id); else setPlacingLegendId(isPlacing ? null : item.id) }}
+                                    className={`shrink-0 rounded px-0.5 text-xs transition-colors ${isPlacing ? "text-blue-600 bg-blue-100" : placed ? "text-red-400" : "text-gray-400 hover:text-gray-700"}`}
+                                  >{placed ? "✕" : "📍"}</button>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        {editingMarkers && markers.length > 0 && (
+                          <p className="text-gray-400 mt-1" style={{ fontSize: 9 }}>Двойной клик — убрать маркер</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Картинка схемы — на всю ширину */}
+                  <div
+                    ref={imageContainerRef}
+                    className={`relative border border-gray-400 bg-gray-50 select-none ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
+                    style={{ width: "100%", minHeight: 300 }}
+                    onClick={editingMarkers ? handleImageAreaClick : undefined}
+                    onMouseMove={editingMarkers ? handleMouseMove : undefined}
+                    onMouseUp={editingMarkers ? handleMouseUp : undefined}
+                    onMouseLeave={editingMarkers ? handleMouseUp : undefined}
+                  >
+                    {imageUrl ? (
+                      <img src={imageUrl} alt="Схема" className="block pointer-events-none" style={{ width: "100%", height: "auto", maxHeight: 420, objectFit: "contain" }} />
+                    ) : (
+                      <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 300 }}>Схема участка не загружена</div>
+                    )}
+                    {editingMarkers && placingLegendId && (
+                      <div className="absolute inset-0 border-2 border-dashed border-blue-400 pointer-events-none flex items-center justify-center">
+                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
+                      </div>
+                    )}
+                    {markers.map(mk => {
+                      const item = legend.find(l => l.id === mk.legendId)
+                      if (!item) return null
+                      return (
+                        <div
+                          key={mk.legendId}
+                          className={`absolute ${editingMarkers ? "cursor-grab active:cursor-grabbing" : ""}`}
+                          style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%,-50%)", zIndex: 10 }}
+                          onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
+                          onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
+                        >
+                          <span className="bg-white border-2 border-gray-800 rounded px-1 font-bold shadow-md" style={{ fontSize: 11, lineHeight: 1.3 }}>{item.symbol}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Подписи */}
+                  <div className="flex justify-between pt-2" style={{ fontSize: 12 }}>
+                    <span className="font-bold">Руководитель горноспасательных работ:&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 140 }}>{form.headRescue}</span></span>
+                    <span>Помощник командира отряда&nbsp;<span className="border-b border-gray-500 inline-block" style={{ minWidth: 120 }}>{form.assistantCommander}</span>&nbsp;/{form.commanderName}/</span>
                   </div>
                 </div>
                 </>
