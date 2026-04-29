@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
 import Icon from "@/components/ui/icon"
-import { exportToWord, exportToExcel } from "@/lib/export-utils"
+import { exportToWord, exportToExcel, exportToPdf } from "@/lib/export-utils"
 
 const GASES: {
   key: string
@@ -68,13 +68,15 @@ function getConclusion(zone: Zone, gasName: string, gasPct: number, o2Pct: numbe
 
 // Треугольная диаграмма Гиббса (SVG)
 function GibbsTriangle({
-  gasPct, o2Pct, n2Pct, zone, lel, uel, lol, onClickPoint
+  gasPct, o2Pct, n2Pct, zone, lel, uel, lol, onClickPoint, svgRef: externalRef
 }: {
   gasPct: number; o2Pct: number; n2Pct: number; zone: Zone | null;
   lel: number; uel: number; lol: number
   onClickPoint?: (gas: number, o2: number, n2: number) => void
+  svgRef?: React.RefObject<SVGSVGElement>
 }) {
-  const svgRef = useRef<SVGSVGElement>(null)
+  const internalRef = useRef<SVGSVGElement>(null)
+  const svgRef = externalRef ?? internalRef
   const size = 400
   const pad = 48
   // Вершины равностороннего треугольника
@@ -290,6 +292,7 @@ function ExplosibilityCalculator() {
     isExplosive: boolean; tri: [number,number][]; pcoKey: string; pchKey: string
   } | null>(null)
   const [calculated, setCalculated] = useState(false)
+  const chartSvgRef = useRef<SVGSVGElement>(null)
 
   const handleCalculate = () => {
     const ch4n = parseFloat(ch4.replace(",",".")) || 0
@@ -344,7 +347,7 @@ function ExplosibilityCalculator() {
 
         <div className="mt-6 rounded-xl border border-foreground/10 overflow-hidden">
           <p className="px-3 py-2 font-mono text-xs text-foreground/40 uppercase tracking-widest border-b border-foreground/10">График треугольника взрываемости</p>
-          <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
+          <svg ref={chartSvgRef} viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full">
             {[0,4,8,12,16,20,24,28,32].map(c => (
               <line key={`gc${c}`} x1={toSvgX(c)} y1={PAD.t} x2={toSvgX(c)} y2={SVG_H-PAD.b} stroke="currentColor" strokeOpacity="0.08" strokeWidth="1"/>
             ))}
@@ -458,9 +461,9 @@ function ExplosibilityCalculator() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
-              <button
-                onClick={() => exportToWord({
+            <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4 flex-wrap">
+              {(() => {
+                const exportData = {
                   title: "Определение взрываемости смеси горючих газов (Боевой устав ВГСЧ 1996, Прил. 11)",
                   formula: "C = CH4 + CO + H2; P_CH = CH4/C; P_CO = CO/C; P_H = H2/C",
                   inputs: [
@@ -476,35 +479,34 @@ function ExplosibilityCalculator() {
                     { label: "P_H₂", value: result.ph.toFixed(3), unit: "" },
                     { label: "Вывод", value: result.isExplosive ? "ВЗРЫВООПАСНА" : "НЕ ВЗРЫВООПАСНА", unit: "" },
                   ],
-                })}
-                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
-              >
-                <Icon name="FileText" size={14} />
-                Word
-              </button>
-              <button
-                onClick={() => exportToExcel({
-                  title: "Определение взрываемости смеси горючих газов (Боевой устав ВГСЧ 1996, Прил. 11)",
-                  formula: "C = CH4 + CO + H2; P_CH = CH4/C; P_CO = CO/C; P_H = H2/C",
-                  inputs: [
-                    { label: "Метан CH₄", value: ch4, unit: "%" },
-                    { label: "Окись углерода CO", value: co, unit: "%" },
-                    { label: "Водород H₂", value: h2, unit: "%" },
-                    { label: "Кислород O₂", value: o2, unit: "%" },
-                  ],
-                  results: [
-                    { label: "C (горючие газы)", value: result.C.toFixed(2), unit: "%" },
-                    { label: "P_CH₄", value: result.pch.toFixed(3), unit: "" },
-                    { label: "P_CO", value: result.pco.toFixed(3), unit: "" },
-                    { label: "P_H₂", value: result.ph.toFixed(3), unit: "" },
-                    { label: "Вывод", value: result.isExplosive ? "ВЗРЫВООПАСНА" : "НЕ ВЗРЫВООПАСНА", unit: "" },
-                  ],
-                })}
-                className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
-              >
-                <Icon name="Sheet" size={14} fallback="Table" />
-                Excel
-              </button>
+                  svgElement: chartSvgRef.current,
+                }
+                return (
+                  <>
+                    <button
+                      onClick={() => exportToPdf(exportData)}
+                      className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-2 font-mono text-xs text-red-400/80 transition-all hover:border-red-500/60 hover:text-red-400"
+                    >
+                      <Icon name="FileDown" size={14} />
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => exportToWord(exportData)}
+                      className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+                    >
+                      <Icon name="FileText" size={14} />
+                      Word
+                    </button>
+                    <button
+                      onClick={() => exportToExcel(exportData)}
+                      className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
+                    >
+                      <Icon name="Sheet" size={14} fallback="Table" />
+                      Excel
+                    </button>
+                  </>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -521,6 +523,7 @@ export default function ExplosionTriangle() {
   const [n2Val,  setN2Val]    = useState("")
   const [zone, setZone]       = useState<Zone | null>(null)
   const [calculated, setCalculated] = useState(false)
+  const gibbsSvgRef = useRef<SVGSVGElement>(null)
 
   const gasPct = parseFloat(gasVal.replace(",", ".")) || 0
   const o2Pct  = parseFloat(o2Val.replace(",", "."))  || 0
@@ -552,6 +555,7 @@ export default function ExplosionTriangle() {
       { label: "Зона",    value: getZoneLabel(zone),  unit: "" },
       { label: "Вывод",   value: getConclusion(zone, selectedGas.name, gasPct, o2Pct, n2Pct, selectedGas.lel, selectedGas.uel), unit: "" },
     ] : [],
+    svgElement: gibbsSvgRef.current,
   })
 
   const zoneColor = zone ? getZoneColor(zone) : null
@@ -702,7 +706,14 @@ export default function ExplosionTriangle() {
                 </p>
 
                 {/* Экспорт */}
-                <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4">
+                <div className="mt-4 flex gap-2 border-t border-foreground/10 pt-4 flex-wrap">
+                  <button
+                    onClick={() => exportToPdf(getExportData())}
+                    className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-2 font-mono text-xs text-red-400/80 transition-all hover:border-red-500/60 hover:text-red-400"
+                  >
+                    <Icon name="FileDown" size={14} />
+                    PDF
+                  </button>
                   <button
                     onClick={() => exportToWord(getExportData())}
                     className="flex items-center gap-2 rounded-lg border border-foreground/20 px-4 py-2 font-mono text-xs text-foreground/70 transition-all hover:border-foreground/40 hover:text-foreground"
@@ -734,6 +745,7 @@ export default function ExplosionTriangle() {
                 lel={selectedGas.lel}
                 uel={selectedGas.uel}
                 lol={selectedGas.lol}
+                svgRef={gibbsSvgRef}
                 onClickPoint={(g, o2, n2) => {
                   setGasVal(String(g))
                   setO2Val(String(o2))
