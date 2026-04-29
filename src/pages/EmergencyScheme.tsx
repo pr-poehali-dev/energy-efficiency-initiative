@@ -892,7 +892,7 @@ export default function EmergencyScheme() {
                   {/* Картинка схемы — на всю ширину */}
                   <div
                     ref={imageContainerRef}
-                    className={`relative border border-gray-400 bg-gray-50 select-none ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
+                    className={`relative border border-gray-400 bg-gray-50 select-none overflow-hidden ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
                     style={{ width: "100%", minHeight: 300 }}
                     onClick={editingMarkers ? handleImageAreaClick : undefined}
                     onMouseMove={editingMarkers ? handleMouseMove : undefined}
