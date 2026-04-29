@@ -815,7 +815,7 @@ export default function EmergencyScheme() {
                         onMouseLeave={editingMarkers ? handleMouseUp : undefined}
                       >
                         {imageUrl ? (
-                          <img src={imageUrl} alt="Схема" className="w-full object-contain pointer-events-none" style={{ maxHeight: 300 }} />
+                          <img src={imageUrl} alt="Схема" className="block mx-auto pointer-events-none" style={{ maxWidth: "100%", maxHeight: 300, width: "auto", height: "auto" }} />
                         ) : (
                           <div className="flex items-center justify-center h-44 text-gray-400 text-sm">Схема участка не загружена</div>
                         )}
