@@ -160,6 +160,7 @@ export default function EmergencyScheme() {
   const [imageUrl, setImageUrl] = useState<string | null>(() => loadSchemes()[0]?.imageDataUrl ?? null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [activeTab, setActiveTab] = useState<"form" | "preview">("form")
+  const [pendingPdfExport, setPendingPdfExport] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [markers, setMarkers] = useState<MarkerPosition[]>(() => loadSchemes()[0]?.markers ?? [])
   const [draggingMarker, setDraggingMarker] = useState<{ legendId: string; offsetX: number; offsetY: number } | null>(null)
@@ -171,6 +172,25 @@ export default function EmergencyScheme() {
   const headerRef = useRef<HTMLDivElement>(null)
 
   const set = (field: keyof FormData) => (v: string) => setForm(f => ({ ...f, [field]: v }))
+
+  // Запуск PDF после реального рендера превью + загрузки всех картинок
+  useEffect(() => {
+    if (!pendingPdfExport || activeTab !== "preview") return
+    const el = previewRef.current
+    if (!el) return
+
+    const allImgs = Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    const pending = allImgs.filter(img => !img.complete || img.naturalWidth === 0)
+    if (pending.length > 0) {
+      Promise.all(pending.map(img => new Promise(res => { img.onload = res; img.onerror = res }))).then(() => {
+        setPendingPdfExport(false)
+        exportToPdf()
+      })
+    } else {
+      setPendingPdfExport(false)
+      exportToPdf()
+    }
+  }, [pendingPdfExport, activeTab])
 
   // Автосохранение при изменении формы
   useEffect(() => {
@@ -673,7 +693,7 @@ export default function EmergencyScheme() {
             <span className="hidden sm:inline">Word</span>
           </button>
           <button
-            onClick={() => { if (activeTab !== "preview") { setActiveTab("preview"); setTimeout(exportToPdf, 300) } else { exportToPdf() } }}
+            onClick={() => { setActiveTab("preview"); setPendingPdfExport(true) }}
             className="flex items-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
           >
             <Icon name="FileDown" size={15} />
