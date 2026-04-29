@@ -301,13 +301,30 @@ export default function EmergencyScheme() {
   const exportToPdf = async () => {
     const el = previewRef.current
     if (!el) return
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: el.scrollWidth, height: el.scrollHeight })
+    const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", width: el.scrollWidth, height: el.scrollHeight })
     const imgData = canvas.toDataURL("image/png")
-    const imgW = canvas.width
-    const imgH = canvas.height
-    const orientation = imgW > imgH ? "landscape" : "portrait"
-    const pdf = new jsPDF({ orientation, unit: "px", format: [imgW, imgH] })
-    pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH)
+
+    // A4 landscape в мм: 297 x 210
+    // Поля: левое 30мм, верхнее 20мм, правое 10мм, нижнее 20мм
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+    const marginLeft = 30
+    const marginTop = 20
+    const marginRight = 10
+    const marginBottom = 20
+    const pageW = 297
+    const pageH = 210
+    const printW = pageW - marginLeft - marginRight  // 257мм
+    const printH = pageH - marginTop - marginBottom  // 170мм
+
+    const ratio = canvas.width / canvas.height
+    let w = printW
+    let h = w / ratio
+    if (h > printH) { h = printH; w = h * ratio }
+
+    const x = marginLeft + (printW - w) / 2
+    const y = marginTop + (printH - h) / 2
+
+    pdf.addImage(imgData, "PNG", x, y, w, h)
     pdf.save(`Схема_аварийного_участка_поз${form.position || "—"}.pdf`)
   }
 
