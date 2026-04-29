@@ -900,7 +900,7 @@ export default function EmergencyScheme() {
                     onMouseLeave={editingMarkers ? handleMouseUp : undefined}
                   >
                     {imageUrl ? (
-                      <img src={imageUrl} alt="Схема" className="block pointer-events-none" style={{ width: "100%", height: "auto", maxHeight: 420, objectFit: "contain" }} />
+                      <img src={imageUrl} alt="Схема" className="block mx-auto pointer-events-none" style={{ maxWidth: "100%", maxHeight: 420, width: "auto", height: "auto" }} />
                     ) : (
                       <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height: 300 }}>Схема участка не загружена</div>
                     )}
