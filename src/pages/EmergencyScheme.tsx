@@ -161,6 +161,7 @@ export default function EmergencyScheme() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [activeTab, setActiveTab] = useState<"form" | "preview">("form")
   const [pendingPdfExport, setPendingPdfExport] = useState(false)
+  const [pendingPngExport, setPendingPngExport] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [markers, setMarkers] = useState<MarkerPosition[]>(() => loadSchemes()[0]?.markers ?? [])
   const [draggingMarker, setDraggingMarker] = useState<{ legendId: string; offsetX: number; offsetY: number } | null>(null)
@@ -191,6 +192,24 @@ export default function EmergencyScheme() {
       exportToPdf()
     }
   }, [pendingPdfExport, activeTab])
+
+  // Запуск PNG после рендера превью
+  useEffect(() => {
+    if (!pendingPngExport || activeTab !== "preview") return
+    const el = previewRef.current
+    if (!el) return
+    const allImgs = Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    const pending = allImgs.filter(img => !img.complete || img.naturalWidth === 0)
+    if (pending.length > 0) {
+      Promise.all(pending.map(img => new Promise(res => { img.onload = res; img.onerror = res }))).then(() => {
+        setPendingPngExport(false)
+        exportToPng()
+      })
+    } else {
+      setPendingPngExport(false)
+      exportToPng()
+    }
+  }, [pendingPngExport, activeTab])
 
   // Автосохранение при изменении формы
   useEffect(() => {
@@ -330,6 +349,41 @@ export default function EmergencyScheme() {
   const updateLegend = (id: string, field: "symbol" | "description" | "imageUrl", value: string) =>
     setLegend(l => l.map(item => item.id === id ? { ...item, [field]: value } : item))
   const removeLegend = (id: string) => setLegend(l => l.filter(item => item.id !== id))
+
+  const exportToPng = async () => {
+    const el = previewRef.current
+    if (!el) return
+
+    const wasEditing = editingMarkers
+    setEditingMarkers(false)
+    setPlacingLegendId(null)
+    await new Promise(r => requestAnimationFrame(r))
+    await new Promise(r => requestAnimationFrame(r))
+
+    const prevWidth = el.style.width
+    const prevMinWidth = el.style.minWidth
+    el.style.width = "1100px"
+    el.style.minWidth = "1100px"
+    await new Promise(r => requestAnimationFrame(r))
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      width: 1100,
+      height: el.scrollHeight,
+    })
+
+    el.style.width = prevWidth
+    el.style.minWidth = prevMinWidth
+    if (wasEditing) setEditingMarkers(true)
+
+    const link = document.createElement("a")
+    link.download = `Схема_аварийного_участка_поз${form.position || "-"}.png`
+    link.href = canvas.toDataURL("image/png")
+    link.click()
+  }
 
   const exportToPdf = async () => {
     const el = previewRef.current
@@ -704,6 +758,13 @@ export default function EmergencyScheme() {
           >
             <Icon name="FileDown" size={15} />
             <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("preview"); setPendingPngExport(true) }}
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+          >
+            <Icon name="Image" size={15} />
+            <span className="hidden sm:inline">PNG</span>
           </button>
         </div>
       </nav>
