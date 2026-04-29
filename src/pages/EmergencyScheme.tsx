@@ -301,16 +301,13 @@ export default function EmergencyScheme() {
   const exportToPdf = async () => {
     const el = previewRef.current
     if (!el) return
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" })
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: el.scrollWidth, height: el.scrollHeight })
     const imgData = canvas.toDataURL("image/png")
-    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
-    const pageW = pdf.internal.pageSize.getWidth()
-    const pageH = pdf.internal.pageSize.getHeight()
-    const ratio = canvas.width / canvas.height
-    let w = pageW - 10
-    let h = w / ratio
-    if (h > pageH - 10) { h = pageH - 10; w = h * ratio }
-    pdf.addImage(imgData, "PNG", (pageW - w) / 2, (pageH - h) / 2, w, h)
+    const imgW = canvas.width
+    const imgH = canvas.height
+    const orientation = imgW > imgH ? "landscape" : "portrait"
+    const pdf = new jsPDF({ orientation, unit: "px", format: [imgW, imgH] })
+    pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH)
     pdf.save(`Схема_аварийного_участка_поз${form.position || "—"}.pdf`)
   }
 
