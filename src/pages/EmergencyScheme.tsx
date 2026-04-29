@@ -320,6 +320,23 @@ export default function EmergencyScheme() {
     setEditingMarkers(false)
     setPlacingLegendId(null)
 
+    // Конвертируем внешние изображения обозначений в base64 чтобы html2canvas их видел
+    const urlToBase64 = async (url: string): Promise<string> => {
+      try {
+        const res = await fetch(url)
+        const blob = await res.blob()
+        return await new Promise<string>(resolve => {
+          const r = new FileReader(); r.onload = () => resolve(r.result as string); r.readAsDataURL(blob)
+        })
+      } catch { return url }
+    }
+    const imgEls = el.querySelectorAll<HTMLImageElement>("img[src^='http']")
+    const origSrcs: { el: HTMLImageElement; src: string }[] = []
+    await Promise.all(Array.from(imgEls).map(async img => {
+      origSrcs.push({ el: img, src: img.src })
+      img.src = await urlToBase64(img.src)
+    }))
+
     // Фиксируем ширину — превью уже имеет правильную раскладку (обозначения справа от картинки)
     const prevWidth = el.style.width
     const prevMinWidth = el.style.minWidth
@@ -338,6 +355,9 @@ export default function EmergencyScheme() {
     el.style.width = prevWidth
     el.style.minWidth = prevMinWidth
     if (wasEditingMarkers) setEditingMarkers(true)
+
+    // Восстанавливаем оригинальные src
+    origSrcs.forEach(({ el: img, src }) => { img.src = src })
 
     const imgData = canvas.toDataURL("image/png")
 
@@ -535,10 +555,24 @@ export default function EmergencyScheme() {
         imageCell = new TableCell({ borders: noBorder, width: { size: 72, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [] })] })
       }
 
-      const legendRows = legend.map(l => new TableRow({ children: [
-        new TableCell({ borders: noBorder, width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.symbol, size: 18, bold: true })] })] }),
-        new TableCell({ borders: noBorder, width: { size: 75, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.description, size: 18 })] })] }),
-      ]}))
+      const legendRows = await Promise.all(legend.map(async l => {
+        let iconRun: ImageRun | TextRun
+        if (l.imageUrl) {
+          try {
+            const res = await fetch(l.imageUrl)
+            const ab = await res.arrayBuffer()
+            iconRun = new ImageRun({ data: ab, transformation: { width: 18, height: 18 }, type: "png" })
+          } catch {
+            iconRun = new TextRun({ text: l.symbol || "?", size: 18, bold: true })
+          }
+        } else {
+          iconRun = new TextRun({ text: l.symbol || "?", size: 18, bold: true })
+        }
+        return new TableRow({ children: [
+          new TableCell({ borders: noBorder, width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [iconRun] })] }),
+          new TableCell({ borders: noBorder, width: { size: 85, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: l.description, size: 18 })] })] }),
+        ]})
+      }))
 
       const legendCell = new TableCell({
         borders: {
