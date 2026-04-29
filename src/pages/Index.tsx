@@ -224,19 +224,17 @@ export default function Index() {
                     <span>Треугольник взрываемости</span>
                     <Icon name="ExternalLink" size={12} className="text-foreground/40 shrink-0" />
                   </button>
+                  <button
+                    onClick={() => { navigate("/emergency-scheme"); setCalcDropdownOpen(false) }}
+                    className="w-full text-left px-4 py-2.5 font-sans text-sm text-foreground/75 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center justify-between gap-3"
+                  >
+                    <span className="flex items-center gap-2"><Icon name="AlertTriangle" size={12} className="text-accent" />Схема аварии</span>
+                    <Icon name="ExternalLink" size={12} className="text-foreground/40 shrink-0" />
+                  </button>
                 </div>
               </div>
             )}
           </div>
-
-          {/* Схема аварийного участка */}
-          <button
-            onClick={() => navigate("/emergency-scheme")}
-            className="group relative font-sans text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            <Icon name="AlertTriangle" size={13} className="text-accent" />
-            Схема аварии
-          </button>
 
           {/* Справочник */}
           <button
@@ -354,7 +352,7 @@ export default function Index() {
                 onClick={() => { navigate("/emergency-scheme"); setMobileMenuOpen(false) }}
                 className="text-left px-3 py-2.5 rounded-lg font-sans text-sm text-foreground/70 hover:bg-foreground/5 hover:text-foreground transition-colors flex items-center justify-between"
               >
-                <span className="flex items-center gap-2"><Icon name="AlertTriangle" size={14} className="text-accent" />Схема аварии</span>
+                <span>Схема аварии</span>
                 <Icon name="ExternalLink" size={14} className="text-foreground/40" />
               </button>
               <div className="my-2 h-px bg-foreground/10" />
