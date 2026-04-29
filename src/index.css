@@ -98,7 +98,7 @@
 
   .custom-cursor-active,
   .custom-cursor-active * {
-    cursor: none;
+    cursor: none !important;
   }
 
   body {

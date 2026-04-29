@@ -34,7 +34,11 @@ export function CustomCursor() {
 
       const target = e.target as HTMLElement
       isPointerRef.current =
-        window.getComputedStyle(target).cursor === "pointer" || target.tagName === "BUTTON" || target.tagName === "A"
+        target.tagName === "BUTTON" ||
+        target.tagName === "A" ||
+        target.closest("button") !== null ||
+        target.closest("a") !== null ||
+        target.getAttribute("role") === "button"
     }
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true })
