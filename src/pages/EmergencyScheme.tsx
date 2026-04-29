@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
 import Icon from "@/components/ui/icon"
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from "docx"
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun, PageOrientation, convertMillimetersToTwip } from "docx"
 import * as XLSX from "xlsx"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
@@ -324,6 +324,14 @@ export default function EmergencyScheme() {
     const x = marginLeft + (printW - w) / 2
     const y = marginTop + (printH - h) / 2
 
+    // Рамка ГОСТ по полям
+    pdf.setDrawColor(0)
+    pdf.setLineWidth(0.5)
+    pdf.rect(marginLeft, marginTop, printW, printH)
+    // Двойная линия слева (штамп)
+    pdf.setLineWidth(1.0)
+    pdf.line(marginLeft, marginTop, marginLeft, marginTop + printH)
+
     pdf.addImage(imgData, "PNG", x, y, w, h)
     pdf.save(`Схема_аварийного_участка_поз${form.position || "—"}.pdf`)
   }
@@ -512,7 +520,32 @@ export default function EmergencyScheme() {
       })
     )
 
-    const doc = new Document({ sections: [{ children }] })
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            size: {
+              orientation: PageOrientation.LANDSCAPE,
+              width: convertMillimetersToTwip(297),
+              height: convertMillimetersToTwip(210),
+            },
+            margin: {
+              left: convertMillimetersToTwip(30),
+              top: convertMillimetersToTwip(20),
+              right: convertMillimetersToTwip(10),
+              bottom: convertMillimetersToTwip(20),
+            },
+            borders: {
+              pageBorderTop: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 0 },
+              pageBorderBottom: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 0 },
+              pageBorderLeft: { style: BorderStyle.SINGLE, size: 18, color: "000000", space: 0 },
+              pageBorderRight: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 0 },
+            },
+          },
+        },
+        children,
+      }],
+    })
     const blob = await Packer.toBlob(doc)
     const url = URL.createObjectURL(new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }))
     const a = document.createElement("a")
