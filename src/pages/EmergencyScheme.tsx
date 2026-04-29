@@ -673,11 +673,22 @@ export default function EmergencyScheme() {
             </button>
             {schemes.map(s => {
               const { pos, date } = schemeLabel(s)
+              const isActive = s.id === activeId
               return (
-                <button key={s.id} onClick={() => switchTo(s)}
-                  className={`shrink-0 text-xs rounded-lg px-3 py-1.5 border transition-colors ${s.id === activeId ? "border-primary bg-primary/10 text-primary" : "border-foreground/15 text-foreground/60 hover:text-foreground"}`}>
-                  {pos} · {date}
-                </button>
+                <div key={s.id} className={`shrink-0 flex items-center gap-0.5 rounded-lg border transition-colors ${isActive ? "border-primary bg-primary/10" : "border-foreground/15"}`}>
+                  <button onClick={() => switchTo(s)}
+                    className={`text-xs px-3 py-1.5 transition-colors ${isActive ? "text-primary" : "text-foreground/60 hover:text-foreground"}`}>
+                    {pos || "—"} · {date}
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); duplicateScheme(s) }} title="Дублировать"
+                    className="text-foreground/30 hover:text-primary p-1.5 transition-colors">
+                    <Icon name="Copy" size={11} />
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); setDeleteConfirm(s.id) }} title="Удалить"
+                    className="text-foreground/30 hover:text-red-400 p-1.5 pr-2 transition-colors">
+                    <Icon name="Trash2" size={11} />
+                  </button>
+                </div>
               )
             })}
           </div>
