@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sds-v4';
+const CACHE_NAME = 'sds-v5';
 
 const PRECACHE = [
   '/',
