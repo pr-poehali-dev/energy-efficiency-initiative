@@ -152,6 +152,7 @@ export default function EmergencyScheme() {
   const [markers, setMarkers] = useState<MarkerPosition[]>(() => loadSchemes()[0]?.markers ?? [])
   const [draggingMarker, setDraggingMarker] = useState<{ legendId: string; offsetX: number; offsetY: number } | null>(null)
   const [placingLegendId, setPlacingLegendId] = useState<string | null>(null)
+  const [editingMarkers, setEditingMarkers] = useState(false)
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -761,6 +762,17 @@ export default function EmergencyScheme() {
 
               {/* ПРЕДПРОСМОТР */}
               {activeTab === "preview" && (
+                <>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-foreground/40 font-mono uppercase tracking-wider">Предпросмотр</span>
+                  <button
+                    onClick={() => { setEditingMarkers(e => !e); setPlacingLegendId(null) }}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors ${editingMarkers ? "border-blue-400/60 bg-blue-500/15 text-blue-400" : "border-foreground/20 bg-foreground/5 text-foreground/60 hover:text-foreground"}`}
+                  >
+                    <Icon name="MapPin" size={13} />
+                    {editingMarkers ? "Готово" : "Разместить маркеры"}
+                  </button>
+                </div>
                 <div ref={previewRef} className="bg-white text-black rounded-xl overflow-hidden shadow-2xl" style={{ fontFamily: "Times New Roman, serif" }}>
                   <div className="px-8 pt-6 pb-2 text-center border-b border-gray-300">
                     <p className="text-base font-bold">
@@ -798,19 +810,19 @@ export default function EmergencyScheme() {
                     <div className="flex gap-4 mb-4">
                       <div
                         ref={imageContainerRef}
-                        className={`flex-1 border border-gray-400 rounded overflow-hidden bg-gray-50 relative select-none ${placingLegendId ? "cursor-crosshair" : draggingMarker ? "cursor-grabbing" : ""}`}
+                        className={`flex-1 border border-gray-400 rounded overflow-hidden bg-gray-50 relative select-none ${editingMarkers && placingLegendId ? "cursor-crosshair" : editingMarkers && draggingMarker ? "cursor-grabbing" : ""}`}
                         style={{ minHeight: 180 }}
-                        onClick={handleImageAreaClick}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
+                        onClick={editingMarkers ? handleImageAreaClick : undefined}
+                        onMouseMove={editingMarkers ? handleMouseMove : undefined}
+                        onMouseUp={editingMarkers ? handleMouseUp : undefined}
+                        onMouseLeave={editingMarkers ? handleMouseUp : undefined}
                       >
                         {imageUrl ? (
                           <img src={imageUrl} alt="Схема" className="w-full object-contain pointer-events-none" style={{ maxHeight: 300 }} />
                         ) : (
                           <div className="flex items-center justify-center h-44 text-gray-400 text-sm">Схема участка не загружена</div>
                         )}
-                        {placingLegendId && (
+                        {editingMarkers && placingLegendId && (
                           <div className="absolute inset-0 border-2 border-dashed border-blue-400 rounded pointer-events-none flex items-center justify-center">
                             <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded shadow">Кликните для размещения</span>
                           </div>
@@ -821,10 +833,10 @@ export default function EmergencyScheme() {
                           return (
                             <div
                               key={mk.legendId}
-                              className="absolute flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing"
+                              className={`absolute flex flex-col items-center gap-0.5 ${editingMarkers ? "cursor-grab active:cursor-grabbing" : ""}`}
                               style={{ left: `${mk.x}%`, top: `${mk.y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}
-                              onMouseDown={e => handleMarkerMouseDown(e, mk.legendId)}
-                              onDoubleClick={e => { e.stopPropagation(); removeMarker(mk.legendId) }}
+                              onMouseDown={editingMarkers ? e => handleMarkerMouseDown(e, mk.legendId) : undefined}
+                              onDoubleClick={editingMarkers ? e => { e.stopPropagation(); removeMarker(mk.legendId) } : undefined}
                             >
                               <span className="bg-white border-2 border-gray-700 rounded px-1 py-0.5 font-bold text-xs shadow-md leading-none">{item.symbol}</span>
                             </div>
@@ -842,21 +854,23 @@ export default function EmergencyScheme() {
                                 <div key={item.id} className="flex items-start gap-1 text-xs">
                                   <span className="border border-gray-400 rounded px-1 py-0.5 font-bold shrink-0 min-w-[28px] text-center">{item.symbol}</span>
                                   <span className="flex-1">{item.description}</span>
-                                  <button
-                                    title={placed ? "Убрать с карты" : "Разместить на схеме"}
-                                    onClick={() => {
-                                      if (placed) removeMarker(item.id)
-                                      else setPlacingLegendId(isPlacing ? null : item.id)
-                                    }}
-                                    className={`shrink-0 rounded p-0.5 transition-colors ${isPlacing ? "text-blue-600 bg-blue-100" : placed ? "text-red-400 hover:text-red-600" : "text-gray-400 hover:text-gray-700"}`}
-                                  >
-                                    {placed ? "✕" : "📍"}
-                                  </button>
+                                  {editingMarkers && (
+                                    <button
+                                      title={placed ? "Убрать с карты" : "Разместить на схеме"}
+                                      onClick={() => {
+                                        if (placed) removeMarker(item.id)
+                                        else setPlacingLegendId(isPlacing ? null : item.id)
+                                      }}
+                                      className={`shrink-0 rounded p-0.5 transition-colors ${isPlacing ? "text-blue-600 bg-blue-100" : placed ? "text-red-400 hover:text-red-600" : "text-gray-400 hover:text-gray-700"}`}
+                                    >
+                                      {placed ? "✕" : "📍"}
+                                    </button>
+                                  )}
                                 </div>
                               )
                             })}
                           </div>
-                          {markers.length > 0 && (
+                          {editingMarkers && markers.length > 0 && (
                             <p className="text-[10px] text-gray-400 mt-2">Двойной клик — убрать маркер</p>
                           )}
                         </div>
@@ -868,6 +882,7 @@ export default function EmergencyScheme() {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           )}
