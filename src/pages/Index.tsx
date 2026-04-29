@@ -114,7 +114,7 @@ export default function Index() {
   }, [currentSection])
 
   return (
-    <main className="relative w-full bg-background">
+    <main className="relative w-full bg-background custom-cursor-active">
       <CustomCursor />
       <GrainOverlay />
 
