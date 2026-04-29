@@ -313,7 +313,19 @@ export default function EmergencyScheme() {
   const exportToPdf = async () => {
     const el = previewRef.current
     if (!el) return
-    const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: "#ffffff", width: el.scrollWidth, height: el.scrollHeight })
+
+    // Фиксируем ширину 1100px чтобы мобильный не сжимал превью
+    const prevWidth = el.style.width
+    const prevMinWidth = el.style.minWidth
+    el.style.width = "1100px"
+    el.style.minWidth = "1100px"
+    await new Promise(r => requestAnimationFrame(r))
+
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: 1100, height: el.scrollHeight })
+
+    el.style.width = prevWidth
+    el.style.minWidth = prevMinWidth
+
     const imgData = canvas.toDataURL("image/png")
 
     // A4 landscape в мм: 297 x 210
