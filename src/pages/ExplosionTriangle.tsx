@@ -15,18 +15,18 @@ const GASES: {
 }[] = [
   { key: "methane",   name: "Метан",        formula: "CH₄",  lel: 5.0,  uel: 15.0, lol: 12.0, description: "Основной рудничный газ" },
   { key: "hydrogen",  name: "Водород",       formula: "H₂",   lel: 4.0,  uel: 75.0, lol: 5.0,  description: "Взрывоопасен в широком диапазоне" },
-  { key: "co",        name: "Угарный газ",   formula: "CO",   lel: 12.5, uel: 74.0, lol: 14.0, description: "Токсичен и взрывоопасен" },
+  { key: "co",        name: "Угарный газ",   formula: "CO",   lel: 12.5, uel: 74.0, lol: 5.5,  description: "Токсичен и взрывоопасен" },
   { key: "ethane",    name: "Этан",          formula: "C₂H₆", lel: 3.0,  uel: 12.5, lol: 11.0, description: "Попутный газ в шахтах" },
-  { key: "propane",   name: "Пропан",        formula: "C₃H₈", lel: 2.1,  uel: 9.5,  lol: 10.0, description: "Тяжелее воздуха, накапливается внизу" },
-  { key: "acetylene", name: "Ацетилен",      formula: "C₂H₂", lel: 2.5,  uel: 80.0, lol: 3.0,  description: "Очень широкий диапазон взрываемости" },
+  { key: "propane",   name: "Пропан",        formula: "C₃H₈", lel: 2.1,  uel: 9.5,  lol: 11.5, description: "Тяжелее воздуха, накапливается внизу" },
+  { key: "acetylene", name: "Ацетилен",      formula: "C₂H₂", lel: 2.5,  uel: 80.0, lol: 5.0,  description: "Очень широкий диапазон взрываемости" },
 ]
 
 type Zone = "explosive" | "lean" | "rich" | "inert" | "unknown"
 
 function getZone(gasPct: number, o2Pct: number, lel: number, uel: number, lol: number): Zone {
-  if (o2Pct < lol) return "inert"
   if (gasPct < lel) return "lean"
   if (gasPct > uel) return "rich"
+  if (o2Pct < lol) return "inert"
   return "explosive"
 }
 
