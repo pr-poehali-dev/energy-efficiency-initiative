@@ -1,5 +1,6 @@
 import { Shader, ChromaFlow, Swirl } from "shaders/react"
 import { GrainOverlay } from "@/components/grain-overlay"
+import { AboutSection } from "@/components/sections/about-section"
 import { VentilationSection } from "@/components/sections/ventilation-section"
 import { FirefightingSection } from "@/components/sections/firefighting-section"
 import { ReferenceSection } from "@/components/sections/reference-section"
@@ -11,7 +12,7 @@ import { useNavigate } from "react-router-dom"
 import Icon from "@/components/ui/icon"
 import { usePwaInstall } from "@/hooks/use-pwa-install"
 
-const SECTION_IDS = ["hero", "ventilation", "firefighting", "explosion", "reference"]
+const SECTION_IDS = ["hero", "ventilation", "firefighting", "explosion", "reference", "about"]
 
 function SectionDivider({ index, label }: { index: number; label: string }) {
   return (
@@ -244,7 +245,16 @@ export default function Index() {
             <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 4 ? "w-full" : "w-0 group-hover:w-full"}`} />
           </button>
 
-
+          {/* О нас */}
+          <button
+            onClick={() => scrollToSection(5)}
+            className={`group relative font-sans text-sm font-medium transition-colors ${
+              currentSection === 5 ? "text-foreground" : "text-foreground/80 hover:text-foreground"
+            }`}
+          >
+            О нас
+            <span className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${currentSection === 5 ? "w-full" : "w-0 group-hover:w-full"}`} />
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -471,7 +481,8 @@ export default function Index() {
         </section>
         <SectionDivider index={4} label="Справочник" />
         <ReferenceSection sectionRef={(el) => { sectionRefs.current[4] = el }} />
-
+        <SectionDivider index={5} label="О нас" />
+        <AboutSection scrollToSection={scrollToSection} sectionRef={(el) => { sectionRefs.current[5] = el }} />
       </div>
       <style>{`section { scroll-margin-top: 80px; }`}</style>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} scrollToSection={scrollToSection} />
