@@ -84,7 +84,7 @@ async function svgToDataUrl(svg: SVGSVGElement, width = 800, height = 800): Prom
   })
 }
 
-export async function exportToPdf(data: ExportData) {
+export async function exportToPdf(data: ExportData): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
   const pageW = 210
   const margin = 20
