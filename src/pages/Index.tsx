@@ -1,5 +1,4 @@
 import { Shader, ChromaFlow, Swirl } from "shaders/react"
-import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
 import { AboutSection } from "@/components/sections/about-section"
 import { VentilationSection } from "@/components/sections/ventilation-section"
@@ -114,8 +113,7 @@ export default function Index() {
   }, [currentSection])
 
   return (
-    <main className="relative w-full bg-background custom-cursor-active">
-      <CustomCursor />
+    <main className="relative w-full bg-background">
       <GrainOverlay />
 
       <div

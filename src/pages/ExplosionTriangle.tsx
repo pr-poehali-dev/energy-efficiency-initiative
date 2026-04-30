@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
 import Icon from "@/components/ui/icon"
 import { exportToWord, exportToExcel, exportToPdf } from "@/lib/export-utils"
@@ -562,7 +561,6 @@ export default function ExplosionTriangle() {
 
   return (
     <main className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
-      <CustomCursor />
       <GrainOverlay />
 
       {/* Шапка */}

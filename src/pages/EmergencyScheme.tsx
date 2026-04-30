@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
 import Icon from "@/components/ui/icon"
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun, PageOrientation, convertMillimetersToTwip } from "docx"
@@ -748,8 +747,7 @@ export default function EmergencyScheme() {
   }
 
   return (
-    <div className="min-h-screen bg-background custom-cursor-active">
-      <CustomCursor />
+    <div className="min-h-screen bg-background">
       <GrainOverlay />
 
       {/* Навигация */}
