@@ -69,20 +69,6 @@ export function AboutSection({ scrollToSection, sectionRef }: { scrollToSection?
                 <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-xl">sds.kpsk@vgsch.mchs.gov.ru</p>
               </a>
 
-              <a
-                href="mailto:delo.kpsk@vgsch.mchs.gov.ru"
-                className={`group block transition-all duration-700 ${
-                  isVisible ? "translate-x-0 opacity-100" : "-translate-x-16 opacity-0"
-                }`}
-                style={{ transitionDelay: "325ms" }}
-              >
-                <div className="mb-1 flex items-center gap-2">
-                  <Mail className="h-3 w-3 text-foreground/60" />
-                  <span className="font-mono text-xs text-foreground/60">Приёмная</span>
-                </div>
-                <p className="text-base text-foreground transition-colors group-hover:text-foreground/70 md:text-xl">delo.kpsk@vgsch.mchs.gov.ru</p>
-              </a>
-
               <div
                 className={`transition-all duration-700 ${
                   isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
