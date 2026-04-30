@@ -8,7 +8,7 @@ import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 
 const ACCIDENT_TYPES = ["Пожар", "Взрыв", "Загазованность", "Обрушение", "Затопление", "Прочее"]
-const STORAGE_KEY = "emergency_schemes_v1"
+const STORAGE_KEY = "emergency_schemes_v2"
 
 interface LegendItem {
   id: string
