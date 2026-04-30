@@ -69,6 +69,8 @@ const LEGEND_IMAGES: { url: string; description: string; symbol: string }[] = [
   { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/c3ca59d8-d4d4-48be-9a62-58e35f43e826.png", description: "Местонахождение пострадавшего (травм.)", symbol: "○" },
   { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/9cd3bc80-f014-46c7-8aea-a8553078d2ce.png", description: "Отделение в движении", symbol: "→" },
   { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/ef86e8c3-f05c-460d-bfbb-a79a0f7e6008.png", description: "Подземная база", symbol: "П.Б" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/0ab4dc2e-4feb-4bc2-b5ff-b292b4a91a3e.png", description: "Надшахтное здание", symbol: "🏭" },
+  { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/d0912bc2-187e-40e7-a401-af003e339654.png", description: "Стационарный пункт ВГК", symbol: "ВГК" },
 ]
 
 const DEFAULT_LEGEND: LegendItem[] = []
