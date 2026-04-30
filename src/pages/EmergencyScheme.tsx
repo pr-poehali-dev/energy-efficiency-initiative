@@ -71,12 +71,7 @@ const LEGEND_IMAGES: { url: string; description: string; symbol: string }[] = [
   { url: "https://cdn.poehali.dev/projects/9e0b7c43-fecb-4248-943e-e190c3206477/bucket/ef86e8c3-f05c-460d-bfbb-a79a0f7e6008.png", description: "Подземная база", symbol: "П.Б" },
 ]
 
-const DEFAULT_LEGEND: LegendItem[] = [
-  { id: "1", symbol: "🏭", description: "Надшахтное здание" },
-  { id: "2", symbol: "🔥", description: "Пожар" },
-  { id: "3", symbol: "ВГК", description: "Стационарный пункт ВГК" },
-  { id: "4", symbol: "→", description: "Отделение в движении" },
-]
+const DEFAULT_LEGEND: LegendItem[] = []
 
 function makeDefaultForm(): FormData {
   return {
