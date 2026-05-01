@@ -1,4 +1,3 @@
-import { Shader, ChromaFlow, Swirl } from "shaders/react"
 import { GrainOverlay } from "@/components/grain-overlay"
 import { AboutSection } from "@/components/sections/about-section"
 import { VentilationSection } from "@/components/sections/ventilation-section"
@@ -44,33 +43,7 @@ export default function Index() {
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
-    const checkShaderReady = () => {
-      if (shaderContainerRef.current) {
-        const canvas = shaderContainerRef.current.querySelector("canvas")
-        if (canvas && canvas.width > 0 && canvas.height > 0) {
-          setIsLoaded(true)
-          return true
-        }
-      }
-      return false
-    }
-
-    if (checkShaderReady()) return
-
-    const intervalId = setInterval(() => {
-      if (checkShaderReady()) {
-        clearInterval(intervalId)
-      }
-    }, 100)
-
-    const fallbackTimer = setTimeout(() => {
-      setIsLoaded(true)
-    }, 1500)
-
-    return () => {
-      clearInterval(intervalId)
-      clearTimeout(fallbackTimer)
-    }
+    setIsLoaded(true)
   }, [])
 
   const scrollToSection = (index: number) => {
@@ -121,34 +94,8 @@ export default function Index() {
         className={`fixed inset-0 z-0 transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
         style={{ contain: "strict" }}
       >
-        <Shader className="h-full w-full">
-          <Swirl
-            colorA="#1a4a8a"
-            colorB="#0d2a5a"
-            speed={0.5}
-            detail={0.7}
-            blend={50}
-            coarseX={40}
-            coarseY={40}
-            mediumX={40}
-            mediumY={40}
-            fineX={40}
-            fineY={40}
-          />
-          <ChromaFlow
-            baseColor="#1a4a8a"
-            upColor="#2060c0"
-            downColor="#0d2a5a"
-            leftColor="#1a3a70"
-            rightColor="#1a3a70"
-            intensity={0.6}
-            radius={1.8}
-            momentum={25}
-            maskType="alpha"
-            opacity={0.7}
-          />
-        </Shader>
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 animated-bg" />
+        <div className="absolute inset-0 bg-black/10" />
       </div>
 
       <nav

@@ -168,6 +168,31 @@
   }
 }
 
+/* Animated background replacing shaders package */
+.animated-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, #1a4a8a 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, #2060c0 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 80%, #0d2a5a 0%, transparent 50%), #0d1f3c;
+  background-size: 200% 200%;
+  animation: bgShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  33% {
+    background-position: 100% 20%;
+  }
+  66% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 20% 0%;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
